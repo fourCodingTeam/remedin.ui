@@ -87,7 +87,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const { data, error } = await supabase.auth.signUp({ email, password });
 
     if (error) throw error;
-    // confirmação por email depende do seu flow no Supabase
   };
 
   const signInWithEmail = async (email: string, password: string) => {

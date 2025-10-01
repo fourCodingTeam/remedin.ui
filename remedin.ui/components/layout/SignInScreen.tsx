@@ -1,17 +1,16 @@
+import { useAuth } from "@/contexts/AuthContext";
+import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Button, Text, TextInput, View } from "react-native";
-import { useAuth } from "../../contexts/AuthContext";
 
 export default function SignInScreen() {
-  const { signInWithEmail, signInWithGoogle, signOut } = useAuth(); // adicionei signOut
+  const { signInWithEmail, signInWithGoogle, signOut } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [authenticated, setAuthenticated] = useState(false);
 
-  // Verifica se existe sessão salva
   useEffect(() => {
     (async () => {
       try {
@@ -19,7 +18,6 @@ export default function SignInScreen() {
         if (sessionStr) {
           const session = JSON.parse(sessionStr);
           if (session?.access_token) {
-            setAuthenticated(true);
           }
         }
       } catch (err) {
@@ -34,28 +32,6 @@ export default function SignInScreen() {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" />
-      </View>
-    );
-  }
-
-  if (authenticated) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Text>Você já está logado!</Text>
-        <Button title="Continuar" onPress={() => console.log("Ir para Home")} />
-        <View style={{ height: 12 }} />
-        <Button
-          title="Sair"
-          color="red"
-          onPress={async () => {
-            try {
-              await signOut(); // limpa sessão do supabase + SecureStore
-              setAuthenticated(false); // volta pra tela de login
-            } catch (err) {
-              console.error("Erro ao deslogar:", err);
-            }
-          }}
-        />
       </View>
     );
   }
@@ -80,7 +56,6 @@ export default function SignInScreen() {
         onPress={async () => {
           try {
             await signInWithEmail(email, password);
-            setAuthenticated(true);
           } catch (e: any) {
             setError(e.message);
           }
@@ -92,12 +67,12 @@ export default function SignInScreen() {
         onPress={async () => {
           try {
             await signInWithGoogle();
-            setAuthenticated(true);
           } catch (e: any) {
             setError(e.message);
           }
         }}
       />
+      <Button title="Criar conta" onPress={() => router.push("/register")} />
       {error && <Text style={{ color: "red" }}>{error}</Text>}
     </View>
   );
