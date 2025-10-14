@@ -1,52 +1,70 @@
+import { TabBarIcon } from "@/components/ui";
 import { theme } from "@/constants/theme";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Tabs } from "expo-router";
 import React from "react";
-
-function TabBarIcon(props: {
-  name: React.ComponentProps<typeof FontAwesome>["name"];
-  color: string;
-}) {
-  return <FontAwesome size={24} style={{ marginBottom: 4 }} {...props} />;
-}
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: theme.accent.primary,
+        tabBarActiveTintColor: theme.colors.accent.primary,
         headerShown: false,
         tabBarStyle: {
+          display: "flex",
+          justifyContent: "space-between",
+          paddingHorizontal: 3,
           marginHorizontal: 16,
           bottom: 16,
-          paddingTop: 8,
-          backgroundColor: theme.common.black,
+          backgroundColor: theme.colors.common.black,
           borderRadius: 999,
-          borderTopColor: theme.accent.primary,
-          alignItems: "center",
-          justifyContent: "center",
+        },
+        tabBarIconStyle: {
+          width: "100%",
+          height: "100%",
+          marginTop: 12,
         },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: "Início",
-          tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
+          title: "",
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon
+              name="home"
+              color={color}
+              isActive={focused}
+              route="Home"
+            />
+          ),
         }}
       />
       <Tabs.Screen
         name="membros"
         options={{
-          title: "Membros",
-          tabBarIcon: ({ color }) => <TabBarIcon name="users" color={color} />,
+          title: "",
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon
+              name="users"
+              color={color}
+              isActive={focused}
+              route="Membros"
+            />
+          ),
         }}
       />
       <Tabs.Screen
         name="saude"
         options={{
-          title: "Saúde",
-          tabBarIcon: ({ color }) => <TabBarIcon name="heart" color={color} />,
+          title: "",
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon
+              name="heart"
+              color={color}
+              isActive={focused}
+              route="Saúde"
+            />
+          ),
         }}
       />
     </Tabs>

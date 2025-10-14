@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
     position: "absolute",
   },
   text: {
-    marginTop: 20,
+    marginBottom: 20,
     fontSize: 28,
     fontFamily: "FigtreeBold",
     color: "white",
