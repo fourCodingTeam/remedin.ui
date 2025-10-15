@@ -1,13 +1,33 @@
 import { MultiSelectTag } from "@/components/ui";
-import React from "react";
+import { TagsMock } from "@/services";
+import React, { useState } from "react";
 import { View } from "react-native";
 
 export default function Home() {
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
+  const handleSelectTag = (tag: string) => {
+    setSelectedTags((prevTags) => {
+      if (prevTags.includes(tag)) {
+        return prevTags.filter((t) => t !== tag);
+      }
+
+      return [...prevTags, tag];
+    });
+  };
+
   return (
     <View>
-      <MultiSelectTag id={1} isSelected label="Selected" />
-      <MultiSelectTag id={1} isSelected={false} label="Not Selected" disabled />
-      <MultiSelectTag id={1} label="Disabled" />
+      {TagsMock.map((tag, index) => (
+        <MultiSelectTag
+          id={tag.id}
+          key={index}
+          label={tag.label}
+          disabled={tag.disabled}
+          isSelected={selectedTags.includes(tag.label)}
+          onPress={() => handleSelectTag(tag.label)}
+        />
+      ))}
     </View>
   );
 }
