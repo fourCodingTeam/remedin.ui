@@ -9,11 +9,10 @@ export const IconWrapper = styled.View<{ isActive: boolean }>`
   text-align: center;
   gap: ${theme.sizes[1]};
 
-  background-color: ${({ isActive }) =>
-    isActive ? theme.colors.common.blackFaded : theme.colors.common.black};
+  background-color: ${theme.colors.common.black};
   border: ${({ isActive }) =>
     isActive ? `1px solid ${theme.colors.accent.primary}` : "none"};
-  border-radius: ${theme.sizes[8]};
+  border-radius: ${theme.sizes[4]};
 
   width: 100%;
   height: 150%;

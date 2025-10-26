@@ -3,7 +3,6 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
 import "react-native-reanimated";
-import AnimatedSplash from "./AnimatedSplash";
 
 
 export { ErrorBoundary } from "expo-router";
@@ -48,9 +47,9 @@ export default function RootLayout() {
     return null;
   }
 
-  if (showSplash) {
-    return <AnimatedSplash onFinish={() => setShowSplash(false)} />;
-  }
+  // if (showSplash) {
+  //   return <AnimatedSplash onFinish={() => setShowSplash(false)} />;
+  // }
 
   return <RootLayoutNav />;
 }
@@ -58,8 +57,8 @@ export default function RootLayout() {
 function RootLayoutNav() {
 
   return (
-    <Stack >
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(protected-routes)" options={{ headerShown: false }} />
     </Stack>
   );
 }

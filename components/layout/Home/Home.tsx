@@ -1,4 +1,4 @@
-import { MultiSelectTag } from "@/components/ui";
+import { Button, MultiSelectTag } from "@/components/ui";
 import { TagsMock } from "@/services";
 import React, { useState } from "react";
 import { View } from "react-native";
@@ -17,17 +17,37 @@ export default function Home() {
   };
 
   return (
-    <View>
-      {TagsMock.map((tag, index) => (
-        <MultiSelectTag
-          id={tag.id}
-          key={index}
-          label={tag.label}
-          disabled={tag.disabled}
-          isSelected={selectedTags.includes(tag.label)}
-          onPress={() => handleSelectTag(tag.label)}
-        />
-      ))}
+    <View
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        paddingVertical: 32,
+        paddingHorizontal: 16,
+        gap: 8,
+      }}
+    >
+      <Button label="Maumau" variant="black" fullWidth icon="plus" />
+      <Button label="Maumau" variant="outline" fullWidth />
+      <Button label="Maumau" variant="primary" fullWidth />
+
+      <View
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          gap: 8,
+        }}
+      >
+        {TagsMock.map((tag, index) => (
+          <MultiSelectTag
+            id={tag.id}
+            key={index}
+            label={tag.label}
+            disabled={tag.disabled}
+            isSelected={selectedTags.includes(tag.label)}
+            onPress={() => handleSelectTag(tag.label)}
+          />
+        ))}
+      </View>
     </View>
   );
 }

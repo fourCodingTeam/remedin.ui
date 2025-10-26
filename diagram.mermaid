@@ -1,0 +1,80 @@
+erDiagram
+    Usuario {
+        string id_usuario PK "NOT NULL"
+        string nome "NOT NULL"
+        string email "NOT NULL (UNIQUE)"
+        string senha_hash "NOT NULL"
+        string tipo "NOT NULL (Enum: 'Paciente', 'Cuidador')"
+        date data_nascimento "NULL (Opcional)"
+        string telefone "NULL (Opcional)"
+        float peso_atual_kg "NULL (Opcional)"
+        int altura_atual_cm "NULL (Opcional)"
+        datetime criado_em "NOT NULL (Default: NOW())"
+    }
+
+    Monitoramento {
+        string id_paciente PK, FK "NOT NULL (Ref: Usuario)"
+        string id_cuidador PK, FK "NOT NULL (Ref: Usuario)"
+        string status_permissao "NOT NULL (Default: 'Pendente')"
+    }
+
+    Dispositivo {
+        string id_dispositivo PK "NOT NULL"
+        string id_usuario_paciente FK "NOT NULL (Ref: Usuario)"
+        string uid_hardware "NOT NULL (UNIQUE)"
+        string nome_dispositivo "NOT NULL (Para UI)"
+        string status_conexao "NOT NULL (Default: 'Offline')"
+        datetime ultimo_contato "NULL"
+    }
+
+    Medicamento {
+        string id_medicamento PK "NOT NULL"
+        string id_usuario_paciente FK "NOT NULL (Ref: Usuario)"
+        string nome "NOT NULL"
+        float dosagem_valor "NOT NULL"
+        string dosagem_unidade "NOT NULL (Enum: 'mg', 'ml', ...)"
+        date data_inicio_tratamento "NOT NULL"
+        date data_fim_tratamento "NULL (Tratamento contínuo)"
+        string observacoes "NULL (Opcional)"
+        datetime criado_em "NOT NULL (Default: NOW())"
+    }
+
+    Agendamento {
+        string id_agendamento PK "NOT NULL"
+        string id_medicamento FK "NOT NULL (Ref: Medicamento)"
+        time horario_programado "NOT NULL"
+        string tipo_frequencia "NOT NULL (Default: 'Diário')"
+        string dias_semana "NULL (Condicional: se tipo=Semanal)"
+        int pre_alarme_minutos "NULL (Default: 0)"
+        int pos_alarme_minutos "NULL (Default: 0)"
+    }
+
+    Log_Dose {
+        string id_log_dose PK "NOT NULL"
+        string id_agendamento FK "NOT NULL (Ref: Agendamento)"
+        datetime timestamp_programado "NOT NULL (Quando devia tomar)"
+        datetime timestamp_real_tomada "NULL (Preenchido na confirmação)"
+        string status_dose "NOT NULL (Enum: 'Pendente', 'Tomado', ...)"
+        bool foi_retroativo "NOT NULL (Default: false)"
+    }
+
+    Log_Vital {
+        string id_log_vital PK "NOT NULL"
+        string id_usuario_paciente FK "NOT NULL (Ref: Usuario)"
+        string tipo_medicao "NOT NULL (Enum: 'Glicose', 'Pressao', ...)"
+        float valor1 "NOT NULL (Glicose, Peso, Sistólica)"
+        float valor2 "NULL (Condicional: Diastólica para Pressão)"
+        datetime timestamp_medicao "NOT NULL (Data/hora informada)"
+        string observacoes "NULL (Opcional)"
+    }
+
+    %% --- Relacionamentos (Idênticos, pois a cardinalidade não muda) ---
+    Usuario ||--o{ Dispositivo : "possui"
+    Usuario ||--o{ Medicamento : "cadastra"
+    Usuario ||--o{ Log_Vital : "registra"
+    
+    Medicamento ||--o{ Agendamento : "tem"
+    Agendamento ||--o{ Log_Dose : "gera"
+    
+    Usuario }o--|| Monitoramento : "é_paciente_em (N)"
+    Usuario }o--|| Monitoramento : "é_cuidador_em (M)"
