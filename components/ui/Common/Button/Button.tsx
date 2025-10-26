@@ -1,3 +1,4 @@
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 import React from "react";
 import { ActivityIndicator } from "react-native";
 import { StyledText } from "../StyledText";
@@ -12,15 +13,17 @@ export function Button({
   size,
   fullWidth,
   textSize,
+  textColor,
   icon,
+  onPress,
 }: ButtonProps) {
   const getTextColorByButtonVariant = (variant: ButtonVariant) => {
     switch (variant) {
+      case "empty":
       case "black":
       case "danger":
       case "secondary":
         return "light";
-      case "empty":
       case "outline":
       case "primary":
         return "dark";
@@ -31,8 +34,7 @@ export function Button({
 
   const renderIcon = (iconName: typeof icon) => {
     if (!iconName) return null;
-    const IconComponent = require("@expo/vector-icons/FontAwesome").default;
-    return <IconComponent name={iconName} size={16} color="#fff" />;
+    return <FontAwesome name={iconName} size={16} color="#fff" />;
   };
 
   return (
@@ -42,6 +44,7 @@ export function Button({
       variant={variant}
       size={size}
       activeOpacity={0.7}
+      onPress={onPress}
     >
       {isLoading ? (
         <ActivityIndicator color="#fff" />
@@ -49,7 +52,9 @@ export function Button({
         <>
           {renderIcon(icon)}
           <StyledText
-            color={getTextColorByButtonVariant(variant || "primary")}
+            color={
+              textColor || getTextColorByButtonVariant(variant || "primary")
+            }
             variant={textSize}
           >
             {label}

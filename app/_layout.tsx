@@ -1,15 +1,11 @@
+import { useUserStore } from "@/stores";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
 import "react-native-reanimated";
 
-
 export { ErrorBoundary } from "expo-router";
-
-export const unstable_settings = {
-  initialRouteName: "(tabs)",
-};
 
 SplashScreen.preventAutoHideAsync();
 
@@ -29,7 +25,7 @@ export default function RootLayout() {
     FigtreeRegular: require("@/assets/fonts/Figtree-Regular.ttf"),
     FigtreeSemiBold: require("@/assets/fonts/Figtree-SemiBold.ttf"),
     FigtreeSemiBoldItalic: require("@/assets/fonts/Figtree-SemiBoldItalic.ttf"),
-    });
+  });
 
   const [showSplash, setShowSplash] = useState(true);
 
@@ -55,10 +51,16 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
+  const { isLoggedIn } = useUserStore();
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(protected-routes)" options={{ headerShown: false }} />
+      <Stack.Protected guard={isLoggedIn}>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      </Stack.Protected>
+      <Stack.Protected guard={!isLoggedIn}>
+        <Stack.Screen name="auth" options={{ headerShown: false }} />
+      </Stack.Protected>
     </Stack>
   );
 }

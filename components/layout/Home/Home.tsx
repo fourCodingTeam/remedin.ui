@@ -26,7 +26,7 @@ export default function Home() {
         gap: 8,
       }}
     >
-      <Button label="Maumau" variant="black" fullWidth icon="plus" />
+      <Button label="Maumau" variant="black" fullWidth />
       <Button label="Maumau" variant="outline" fullWidth />
       <Button label="Maumau" variant="primary" fullWidth />
 

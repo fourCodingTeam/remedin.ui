@@ -13,6 +13,8 @@ export type ButtonVariant =
 
 export type ButtonSize = "sm" | "md" | "lg";
 
+export type StyledTextColor = "default" | "muted" | "black" | "light" | "dark";
+
 export type IconName = keyof typeof FontAwesome.glyphMap;
 
 export interface ButtonProps extends TouchableOpacityProps {
@@ -23,4 +25,6 @@ export interface ButtonProps extends TouchableOpacityProps {
   label: string;
   textSize?: StyledTextVariant;
   icon?: IconName;
+  textColor?: StyledTextColor;
+  onPress?: () => void;
 }

@@ -12,10 +12,10 @@ export const StyledTextVariants = styled.Text<{
   }};
 
   font-size: ${({ variant }) => {
-    if (variant.startsWith("small")) return theme.sizes["3"];
-    if (variant.startsWith("medium")) return theme.sizes["4"];
-    if (variant.startsWith("large")) return theme.sizes["6"];
-    if (variant.startsWith("largest")) return theme.sizes["8"];
+    if (variant.startsWith("small")) return theme.sizes[3];
+    if (variant.startsWith("medium")) return theme.sizes[4];
+    if (variant.startsWith("largest")) return theme.sizes[8];
+    if (variant.startsWith("large")) return theme.sizes[6];
     return theme.sizes["4"];
   }};
 
