@@ -18,7 +18,7 @@ export const InputBase: React.FC<InputBaseProps> = (props) => {
   return (
     <InputBaseWrapper isActive={isFocused} isCompact={props.compact}>
       <Pressable onPressIn={props.onPressIn} disabled={props.editable === false ? false : undefined} style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
-        {props.prefixIcon && <InputPrefixIconWrapper name={props.prefixIcon} size={18} solid={false}/>}
+        {props.prefixIcon && <InputPrefixIconWrapper name={props.prefixIcon} size={18} />}
         <InputStyle {...props} onFocus={onFocus} onBlur={onBlur} pointerEvents={props.editable === false ? "none" : undefined} />
         {props.suffixIcon && <InputSuffixIconWrapper name={props.suffixIcon} size={18} />}
       </Pressable>
