@@ -1,27 +1,40 @@
 import { theme } from "@/constants/theme";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 import styled from "styled-components/native";
 
 type InputBaseWrapperProps = {
     isActive: boolean
+    isCompact?: boolean
 }
 
 export const InputBaseWrapper = styled.View<InputBaseWrapperProps>`
-    width: 100%;
+    width: auto;
+    flex-direction: row;
+    align-items: center;
     border-radius: ${theme.borderRadius[2]};
-    padding: ${theme.sizes[3]} ${theme.sizes[4]};
+    ${({ isCompact }) => isCompact ? `
+        padding: ${theme.sizes[2]} ${theme.sizes[3]};`
+        : `padding: ${theme.sizes[3]} ${theme.sizes[4]};`}
 
-     border: ${({ isActive }) =>
+    border: ${({ isActive }) =>
     isActive ? `1px solid ${theme.colors.accent.primary}` : `1px solid ${theme.colors.border.default}`};
 `
 export const InputStyle = styled.TextInput`
+    flex: 1;
     width: 100%;
-    height: 19px;
+    height: 40px;
     outline: none;
     border: none;
-    color: red;
+    color: ${theme.colors.text.default};
     font-family: ${theme.fonts.regular};
 
-    /* &::placeholder{
+     &::placeholder{
         color: ${theme.colors.text.muted};
-    } */
+    }
+`
+export const InputPrefixIconWrapper = styled(FontAwesome)`
+    margin-right: ${theme.sizes[2]};
+`
+export const InputSuffixIconWrapper = styled(FontAwesome)`
+    margin-left: ${theme.sizes[2]};
 `

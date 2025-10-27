@@ -1,7 +1,6 @@
-import FontAwesome from "@expo/vector-icons/FontAwesome";
 import React, { useState } from "react";
-import { BlurEvent, FocusEvent } from "react-native";
-import { InputBaseWrapper, InputStyle } from "./InputBase.styles";
+import { BlurEvent, FocusEvent, Pressable } from "react-native";
+import { InputBaseWrapper, InputPrefixIconWrapper, InputStyle, InputSuffixIconWrapper } from "./InputBase.styles";
 import { InputBaseProps } from "./InputBase.types";
 
 export const InputBase: React.FC<InputBaseProps> = (props) => {
@@ -17,10 +16,12 @@ export const InputBase: React.FC<InputBaseProps> = (props) => {
   };
 
   return (
-    <InputBaseWrapper isActive={isFocused}>
-      {props.prefixIcon && <FontAwesome name={props.prefixIcon} />}
-      <InputStyle {...props} onFocus={onFocus} onBlur={onBlur} />
-      {props.suffixIcon && <FontAwesome name={props.suffixIcon} />}
+    <InputBaseWrapper isActive={isFocused} isCompact={props.compact}>
+      <Pressable onPressIn={props.onPressIn} disabled={props.editable === false ? false : undefined} style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+        {props.prefixIcon && <InputPrefixIconWrapper name={props.prefixIcon} size={18} />}
+        <InputStyle {...props} onFocus={onFocus} onBlur={onBlur} pointerEvents={props.editable === false ? "none" : undefined} />
+        {props.suffixIcon && <InputSuffixIconWrapper name={props.suffixIcon} size={18} />}
+      </Pressable>
     </InputBaseWrapper>
   );
 };
