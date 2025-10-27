@@ -83,13 +83,12 @@ export default function Home() {
           />
         ))}
       </View>
-      <InputBase prefixIcon="automobile" suffixIcon="angle-double-right"/>
+      <InputBase prefixIcon="envelope" suffixIcon="search"/>
       <InputDate value={birth} onChange={setBirth} placeholder="data" />
       <InputSelect options={options}
         value={selected}
         onChange={setSelected}
         placeholder="Escolha uma opção"
-        prefixIcon="list"
         compact
       />
     </View>

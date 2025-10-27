@@ -1,20 +1,19 @@
 import React, { useState } from "react";
-import { Platform } from "react-native";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { InputBase } from "../InputBase";
 import type { InputDateProps } from "./InputData.types";
 
-function formatDateToYYYYMMDD(d: Date) {
+function formatDateToDDMMYYYY(d: Date) {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
+  return `${day}-${m}-${y}`;
 }
 
 export function InputDate({
   value,
   onChange,
-  placeholder = "YYYY-MM-DD",
+  placeholder = "DD-MM-YYYY",
   mode = "date",
   ...rest
 }: InputDateProps) {
@@ -27,7 +26,7 @@ export function InputDate({
   };
 
   const handleConfirm = (date: Date) => {
-    const formatted = formatDateToYYYYMMDD(date);
+    const formatted = formatDateToDDMMYYYY(date);
     setVisible(false);
     onChange?.(formatted);
   };
@@ -35,7 +34,7 @@ export function InputDate({
    return (
     <>
       <InputBase
-        suffixIcon="calendar-plus-o"
+        suffixIcon="calendar"
         {...(rest as any)}
         value={value}
         placeholder={placeholder}
@@ -45,7 +44,7 @@ export function InputDate({
 
       <DateTimePickerModal
         isVisible={visible}
-        mode={mode === "datetime" && Platform.OS === "web" ? "date" : (mode as any)}
+        mode={mode === "datetime" ? "date" : (mode as any)}
         date={parseDateOrNow(value)}
         onConfirm={handleConfirm}
         onCancel={() => setVisible(false)}

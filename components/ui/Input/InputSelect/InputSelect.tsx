@@ -20,7 +20,6 @@ export function InputSelect({ options, value, onChange, placeholder = "Selecione
   return (
     <>
       <InputBase
-        suffixIcon="caret-down"
         {...(rest as any)}
         value={selectedLabel}
         placeholder={placeholder}
