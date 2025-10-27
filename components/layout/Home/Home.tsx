@@ -1,6 +1,6 @@
-import { InputBase, InputDate, InputSelect, Button, MultiSelectTag } from "@/components/ui";
+import { Button, InputBase, InputDate, InputSelect, MultiSelectTag } from "@/components/ui";
 import { TagsMock } from "@/services";
-import React, { useState }, from "react";
+import React, { useState } from "react";
 import { View } from "react-native";
 
 export default function Home() {
