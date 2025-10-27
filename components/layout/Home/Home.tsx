@@ -1,8 +1,21 @@
-import { InputBase, InputDate, InputSelect, MultiSelectTag } from "@/components/ui";
-import React, { useState } from "react";
+import { InputBase, InputDate, InputSelect, Button, MultiSelectTag } from "@/components/ui";
+import { TagsMock } from "@/services";
+import React, { useState }, from "react";
 import { View } from "react-native";
 
 export default function Home() {
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
+  const handleSelectTag = (tag: string) => {
+    setSelectedTags((prevTags) => {
+      if (prevTags.includes(tag)) {
+        return prevTags.filter((t) => t !== tag);
+      }
+
+      return [...prevTags, tag];
+    });
+  };
+
     const [birth, setBirth] = useState("");
     const [selected, setSelected] = useState<string | number | undefined>(undefined);
 
@@ -39,10 +52,37 @@ export default function Home() {
   { label: "Opção 30", value: "30" },
 ];
   return (
-    <View>
-      <MultiSelectTag id={1} isSelected label="Selected" />
-      <MultiSelectTag id={1} isSelected={false} label="Not Selected" disabled />
-      <MultiSelectTag id={1} label="Disabled" />
+    <View
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        paddingVertical: 32,
+        paddingHorizontal: 16,
+        gap: 8,
+      }}
+    >
+      <Button label="Maumau" variant="black" fullWidth />
+      <Button label="Maumau" variant="outline" fullWidth />
+      <Button label="Maumau" variant="primary" fullWidth />
+
+      <View
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          gap: 8,
+        }}
+      >
+        {TagsMock.map((tag, index) => (
+          <MultiSelectTag
+            id={tag.id}
+            key={index}
+            label={tag.label}
+            disabled={tag.disabled}
+            isSelected={selectedTags.includes(tag.label)}
+            onPress={() => handleSelectTag(tag.label)}
+          />
+        ))}
+      </View>
       <InputBase prefixIcon="automobile" suffixIcon="angle-double-right"/>
       <InputDate value={birth} onChange={setBirth} placeholder="data" />
       <InputSelect options={options}

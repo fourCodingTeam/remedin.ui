@@ -1,6 +1,7 @@
 export type MultiSelectTagProps = {
-  id: number
-  label: string
-  isSelected?: boolean
-  disabled?: boolean
-}
+  id: number;
+  label: string;
+  isSelected?: boolean;
+  disabled?: boolean;
+  onPress?: () => void;
+};

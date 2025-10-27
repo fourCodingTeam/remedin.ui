@@ -1,6 +1,6 @@
 import { Text } from 'react-native';
 
-export default function Saude() {
+export default function SaudeScreen() {
   return (
     <Text>Oi 3</Text>
   );

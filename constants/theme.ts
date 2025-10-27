@@ -2,30 +2,30 @@ export const theme = {
   colors: {
     common: {
       black: "#0D0D0D",
-      blackFaded: "#101010",
+      blackFaded: "#1A1A1A",
     },
     background: {
-      light: "#F2F2F2",
-      default: "#E6E6E6",
-      dark: "#D9D9D9",
+      light: "#FEFEFE",
+      default: "#F2F2F2",
+      dark: "#E6E6E6",
     },
     text: {
       default: "#1A1A1A",
-      muted: "#4D4D4D",
+      muted: "#737373",
     },
     border: {
-      default: "#404040",
-      muted: "#8C8C8C",
+      default: "#CCCCCC",
+      muted: "#E6E6E6",
     },
     accent: {
-      primary: "#1CE12F",
-      primaryFaded: "#EC7985",
+      primary: "#33ED5B",
+      primaryFaded: "#D1F8C9",
       secondary: "#4068EE",
-      secondaryFaded: "#7390F2",
+      secondaryFaded: "#8AA2F4",
     },
     warnings: {
       success: "#43B534",
-      info: "#4F6FDA",
+      info: "#4F7FDA",
       danger: "#DA4F4F",
       warning: "#D8B233",
     },

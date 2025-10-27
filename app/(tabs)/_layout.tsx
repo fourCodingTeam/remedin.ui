@@ -10,17 +10,18 @@ export default function TabLayout() {
         tabBarActiveTintColor: theme.colors.accent.primary,
         headerShown: false,
         tabBarStyle: {
+          height: 99,
           display: "flex",
           justifyContent: "space-between",
           paddingHorizontal: 3,
-          marginHorizontal: 16,
-          bottom: 16,
+          borderTopRightRadius: 16,
+          borderTopLeftRadius: 16,
+          bottom: -1, // o borderRadius faz ele adicionar uma linha invisível embaixo, por isso o bottom -1
           backgroundColor: theme.colors.common.black,
-          borderRadius: 999,
         },
         tabBarIconStyle: {
           width: "100%",
-          height: "100%",
+          height: 36,
           marginTop: 12,
         },
       }}
