@@ -13,8 +13,8 @@ export const InputBaseWrapper = styled.View<InputBaseWrapperProps>`
     align-items: center;
     border-radius: ${theme.borderRadius[2]};
     ${({ isCompact }) => isCompact ? `
-        padding: ${theme.sizes[2]} ${theme.sizes[3]};`
-        : `padding: ${theme.sizes[3]} ${theme.sizes[4]};`}
+        padding: ${theme.sizes[1]} ${theme.sizes[3]};`
+        : `padding: ${theme.sizes[2]} ${theme.sizes[4]};`}
 
     border: ${({ isActive }) =>
     isActive ? `1px solid ${theme.colors.accent.primary}` : `1px solid ${theme.colors.border.default}`};
@@ -27,6 +27,7 @@ export const InputStyle = styled.TextInput`
     border: none;
     color: ${theme.colors.text.default};
     font-family: ${theme.fonts.regular};
+    font-size: ${theme.sizes[4]};
 
      &::placeholder{
         color: ${theme.colors.text.muted};

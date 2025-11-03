@@ -83,8 +83,8 @@ export default function Home() {
           />
         ))}
       </View>
-      <InputBase prefixIcon="envelope" suffixIcon="search"/>
-      <InputDate value={birth} onChange={setBirth} placeholder="data" />
+      <InputBase prefixIcon="envelope" compact/>
+      <InputDate value={birth} onChange={setBirth} placeholder="Selecione a data" compact/>
       <InputSelect options={options}
         value={selected}
         onChange={setSelected}

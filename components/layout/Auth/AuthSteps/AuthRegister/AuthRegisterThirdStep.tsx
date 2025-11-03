@@ -1,14 +1,29 @@
+import { InputBase } from "@/components/ui";
+import { StyledText } from "@/components/ui/Common/StyledText";
+import { RegisterThirdStepFormData, registerThirdStepSchema } from "@/validators";
+import { zodResolver } from "@hookform/resolvers/zod";
 import React from "react";
+import { Controller, useForm } from "react-hook-form";
 import {
   GenericStepContainer,
   InputsWrapper,
   StepDescription,
   StepTitle,
-  StyledTextInput,
   TextWrapper,
 } from "../AuthModal.styles";
 
 export default function AuthRegisterThirdStep() {
+  const {
+    control,
+    formState: { errors }
+  } = useForm<RegisterThirdStepFormData>({
+    resolver: zodResolver(registerThirdStepSchema),
+    defaultValues: {
+      password: "",
+      confirmPassword: ""
+    }
+  });
+
   return (
     <GenericStepContainer>
       <TextWrapper>
@@ -19,8 +34,48 @@ export default function AuthRegisterThirdStep() {
         </StepDescription>
       </TextWrapper>
       <InputsWrapper>
-        <StyledTextInput placeholder="Sua senha" secureTextEntry />
-        <StyledTextInput placeholder="Confirme sua senha" secureTextEntry />
+        <Controller
+          control={control}
+          name="password"
+          render={({ field: { onChange, value } }) => (
+            <>
+              <InputBase
+                placeholder="Sua senha"
+                secureTextEntry
+                prefixIcon="lock"
+                compact
+                value={value}
+                onChangeText={onChange}
+              />
+              {errors.password && (
+                <StyledText variant="smallRegular" color="muted">
+                  {errors.password.message}
+                </StyledText>
+              )}
+            </>
+          )}
+        />
+        <Controller
+          control={control}
+          name="confirmPassword"
+          render={({ field: { onChange, value } }) => (
+            <>
+              <InputBase
+                placeholder="Confirme sua senha"
+                secureTextEntry
+                prefixIcon="lock"
+                compact
+                value={value}
+                onChangeText={onChange}
+              />
+              {errors.confirmPassword && (
+                <StyledText variant="smallRegular" color="muted">
+                  {errors.confirmPassword.message}
+                </StyledText>
+              )}
+            </>
+          )}
+        />
       </InputsWrapper>
     </GenericStepContainer>
   );

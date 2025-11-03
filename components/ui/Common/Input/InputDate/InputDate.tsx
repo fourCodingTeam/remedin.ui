@@ -44,7 +44,7 @@ export function InputDate({
 
       <DateTimePickerModal
         isVisible={visible}
-        mode={mode === "datetime" ? "date" : (mode as any)}
+        mode={mode === "datetime" ? "date" : (mode as "date" | "time" | "datetime")}
         date={parseDateOrNow(value)}
         onConfirm={handleConfirm}
         onCancel={() => setVisible(false)}

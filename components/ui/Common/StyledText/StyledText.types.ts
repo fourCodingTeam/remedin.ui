@@ -17,7 +17,8 @@ export type StyledTextColor =
   | "muted"
   | "black"
   | "light"
-  | "dark";
+  | "dark"
+  | "error";
 
 export interface StyledTextProps {
   variant?: StyledTextVariant;

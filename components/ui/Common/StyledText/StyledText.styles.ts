@@ -29,6 +29,8 @@ export const StyledTextVariants = styled.Text<{
         return theme.colors.background.light;
       case "dark":
         return theme.colors.text.default;
+      case "error":
+        return theme.colors.warnings.danger;
       default:
         return theme.colors.text.default;
     }
