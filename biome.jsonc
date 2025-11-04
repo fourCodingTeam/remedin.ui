@@ -17,7 +17,7 @@
         "noUnusedFunctionParameters": "warn"
       },
       "nursery": {
-        "noShadow": "warn"
+        "noShadow": "off"
       },
       "suspicious": {
         "noExplicitAny": "warn"

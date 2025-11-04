@@ -1,5 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { signInWithEmail } from "@/auth/signIn";
 import { InputBase } from "@/components/ui";
 import { Button } from "@/components/ui/Common/Button"; //
 import { StyledText } from "@/components/ui/Common/StyledText";
@@ -17,7 +19,10 @@ import {
 import type { AuthLoginProps } from "../AuthModal.types";
 
 export function AuthLogin({ onClose, onNavigateToRegister }: AuthLoginProps) {
-  const { setIsLoggedIn } = useUserStore(); //
+  const { setIsLoggedIn } = useUserStore();
+
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
     control,
@@ -31,10 +36,20 @@ export function AuthLogin({ onClose, onNavigateToRegister }: AuthLoginProps) {
     },
   });
 
-  const handleLoginPress = handleSubmit((_data) => {
-    // Se der certo:
-    setIsLoggedIn(true); //
-    onClose();
+  const handleLoginPress = handleSubmit(async (data) => {
+    try {
+      setAuthError(null);
+      setIsSubmitting(true);
+
+      await signInWithEmail(data.email, data.password);
+
+      setIsLoggedIn(true);
+      onClose();
+    } catch {
+      setAuthError("Não foi possível fazer login. Tente novamente.");
+    } finally {
+      setIsSubmitting(false);
+    }
   });
 
   return (
@@ -96,6 +111,15 @@ export function AuthLogin({ onClose, onNavigateToRegister }: AuthLoginProps) {
                 </>
               )}
             />
+            {authError && (
+              <StyledText
+                color="error"
+                style={{ marginTop: 8 }}
+                variant="smallRegular"
+              >
+                {authError}
+              </StyledText>
+            )}
           </InputsWrapper>
         </GenericStepContainer>
       </ModalContent>
@@ -108,6 +132,7 @@ export function AuthLogin({ onClose, onNavigateToRegister }: AuthLoginProps) {
           variant="black"
         />
         <Button
+          disabled={isSubmitting}
           fullWidth
           label="Não tem uma conta?"
           onPress={onNavigateToRegister}
