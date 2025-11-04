@@ -1,5 +1,5 @@
+import { useState } from "react";
 import { Button } from "@/components/ui";
-import React, { useState } from "react";
 import { ButtonsWrapper, StyledImage, StyledView } from "./Auth.styles";
 import { AuthModal } from "./AuthSteps";
 
@@ -19,16 +19,16 @@ export function Auth() {
   return (
     <StyledView>
       <StyledImage
-        source={require("@/assets/images/auth/iPhone 16 - 3 - Login.png")}
         resizeMode="cover"
+        source={require("@/assets/images/auth/iPhone 16 - 3 - Login.png")}
       />
       <ButtonsWrapper>
-        <Button label="Entrar" variant="primary" onPress={handlePressLogIn} />
+        <Button label="Entrar" onPress={handlePressLogIn} variant="primary" />
         <Button
           icon="google"
           label="Login com o Google"
-          variant="outline"
           textColor="light"
+          variant="outline"
         />
       </ButtonsWrapper>
 

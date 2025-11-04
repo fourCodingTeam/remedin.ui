@@ -1,11 +1,10 @@
+import { useState } from "react";
+import { View } from "react-native";
 import { Button } from "@/components/ui/Common/Button"; //
 import { Stepper } from "@/components/ui/Common/Stepper";
-import React, { useState } from "react";
-import { BottomContainer, ModalContent } from "../AuthModal.styles";
-import { AuthRegisterProps } from "../AuthModal.types";
-
 import { theme } from "@/constants/theme";
-import { View } from "react-native";
+import { BottomContainer, ModalContent } from "../AuthModal.styles";
+import type { AuthRegisterProps } from "../AuthModal.types";
 import AuthRegisterFirstStep from "./AuthRegisterFirstStep";
 import AuthRegisterFourthStep from "./AuthRegisterFourthStep";
 import AuthRegisterSecondStep from "./AuthRegisterSecondStep";
@@ -51,7 +50,7 @@ export function AuthRegister({
     <>
       <ModalContent>
         <View style={{ gap: theme.sizes[4] }}>
-          <Stepper steps={TOTAL_STEPS} currentStep={step} />
+          <Stepper currentStep={step} steps={TOTAL_STEPS} />
         </View>
 
         {renderStep()}
@@ -59,27 +58,27 @@ export function AuthRegister({
 
       <BottomContainer>
         <Button
-          label="Avançar"
-          variant="black"
           fullWidth
+          label="Avançar"
           onPress={handleAdvance}
+          variant="black"
         />
         {step === TOTAL_STEPS && (
           <Button
-            label="Pular"
-            variant="empty"
-            textColor="dark"
             fullWidth
+            label="Pular"
             onPress={onClose}
+            textColor="dark"
+            variant="empty"
           />
         )}
         {step === 1 && (
           <Button
-            label="Já tem uma conta?"
-            variant="empty"
-            textColor="dark"
             fullWidth
+            label="Já tem uma conta?"
             onPress={onNavigateToLogin}
+            textColor="dark"
+            variant="empty"
           />
         )}
       </BottomContainer>

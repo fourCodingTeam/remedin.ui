@@ -1,13 +1,13 @@
+import { useState } from "react";
 import { StyledText } from "@/components/ui/Common/StyledText";
 import { MultiSelectTag } from "@/components/ui/MultiSelectTag";
 import { theme } from "@/constants/theme";
-import React, { useState } from "react";
 import {
-    GenericStepContainer,
-    StepDescription,
-    StepTitle,
-    TagRow,
-    TextWrapper,
+  GenericStepContainer,
+  StepDescription,
+  StepTitle,
+  TagRow,
+  TextWrapper,
 } from "../AuthModal.styles";
 
 const beforeOptions = [
@@ -39,9 +39,8 @@ export default function AuthRegisterFourthStep() {
         return prev.filter((currentId) => currentId !== id);
       }
       // Se não, adiciona
-      else {
-        return [...prev, id];
-      }
+
+      return [...prev, id];
     });
   };
 
@@ -53,9 +52,8 @@ export default function AuthRegisterFourthStep() {
         return prev.filter((currentId) => currentId !== id);
       }
       // Se não, adiciona
-      else {
-        return [...prev, id];
-      }
+
+      return [...prev, id];
     });
   };
 
@@ -69,38 +67,38 @@ export default function AuthRegisterFourthStep() {
       </TextWrapper>
 
       <StyledText
-        variant="mediumSemiBold"
         color="black"
         style={{ marginBottom: theme.sizes[4] }}
+        variant="mediumSemiBold"
       >
         Antes de tomar o remédio, desde quando quer ser avisado?
       </StyledText>
       <TagRow>
         {beforeOptions.map((opt) => (
           <MultiSelectTag
-            key={opt.id}
             id={opt.id}
-            label={opt.label}
             isSelected={selectedBefore.includes(opt.id)}
+            key={opt.id}
+            label={opt.label}
             onPress={() => handleToggleBefore(opt.id)}
           />
         ))}
       </TagRow>
 
       <StyledText
-        variant="mediumSemiBold"
         color="black"
         style={{ marginBottom: theme.sizes[4] }}
+        variant="mediumSemiBold"
       >
         Se esquecer, quando gostaria de ser lembrado?
       </StyledText>
       <TagRow>
         {afterOptions.map((opt) => (
           <MultiSelectTag
-            key={opt.id}
             id={opt.id}
-            label={opt.label}
             isSelected={selectedAfter.includes(opt.id)}
+            key={opt.id}
+            label={opt.label}
             onPress={() => handleToggleAfter(opt.id)}
           />
         ))}

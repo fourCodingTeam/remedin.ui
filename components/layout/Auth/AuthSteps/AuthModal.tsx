@@ -1,13 +1,12 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Modal } from "react-native";
 import { AuthLogin } from "./AuthLogin";
 import { ModalView } from "./AuthModal.styles";
-import { AuthModalProps } from "./AuthModal.types";
+import type { AuthModalProps } from "./AuthModal.types";
 import { AuthRegister } from "./AuthRegister";
 
 export function AuthModal({ isVisible, onClose }: AuthModalProps) {
   const [currentView, setCurrentView] = useState<"login" | "register">("login");
-  console.log("AuthModal rendered with isVisible:", isVisible);
 
   const handleNavigateToRegister = () => {
     setCurrentView("register");
@@ -19,10 +18,10 @@ export function AuthModal({ isVisible, onClose }: AuthModalProps) {
 
   return (
     <Modal
-      visible={isVisible}
-      onRequestClose={onClose}
       animationType="slide"
+      onRequestClose={onClose}
       presentationStyle="formSheet"
+      visible={isVisible}
     >
       <ModalView>
         {currentView === "login" ? (

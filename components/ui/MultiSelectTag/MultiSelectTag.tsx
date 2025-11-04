@@ -1,7 +1,6 @@
-import React from "react";
 import { StyledText } from "../Common";
 import { TagWrapper } from "./MultiSelectTag.styles";
-import { MultiSelectTagProps } from "./MultiSelectTag.types";
+import type { MultiSelectTagProps } from "./MultiSelectTag.types";
 
 export function MultiSelectTag({
   id,
@@ -12,9 +11,9 @@ export function MultiSelectTag({
 }: MultiSelectTagProps) {
   return (
     <TagWrapper
-      isSelected={isSelected}
-      disabled={disabled}
       activeOpacity={0.7}
+      disabled={disabled}
+      isSelected={isSelected}
       onPress={onPress}
     >
       <StyledText variant="mediumRegular">{label}</StyledText>

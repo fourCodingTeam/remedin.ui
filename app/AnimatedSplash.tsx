@@ -1,11 +1,11 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Animated, {
   Easing,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
-  withTiming
+  withTiming,
 } from "react-native-reanimated";
 
 export default function AnimatedSplash({ onFinish }: { onFinish: () => void }) {
@@ -17,11 +17,14 @@ export default function AnimatedSplash({ onFinish }: { onFinish: () => void }) {
   useEffect(() => {
     eyesOpacity.value = withDelay(500, withTiming(1, { duration: 800 }));
     bgColor.value = withDelay(1600, withTiming(1, { duration: 500 }));
-    mascotScale.value = withDelay(1800, withTiming(1, { duration: 800, easing: Easing.out(Easing.exp) }));
+    mascotScale.value = withDelay(
+      1800,
+      withTiming(1, { duration: 800, easing: Easing.out(Easing.exp) })
+    );
     textOpacity.value = withDelay(2600, withTiming(1, { duration: 600 }));
-    
-    setTimeout(() => (onFinish)(), 4000);
-  }, []);
+
+    setTimeout(() => onFinish(), 4000);
+  }, [bgColor, eyesOpacity, mascotScale, onFinish, textOpacity]);
 
   const animatedBg = useAnimatedStyle(() => ({
     backgroundColor: bgColor.value === 0 ? "#000" : "#00FF66",
@@ -31,7 +34,7 @@ export default function AnimatedSplash({ onFinish }: { onFinish: () => void }) {
     opacity: eyesOpacity.value,
   }));
 
-  const mascotStyle = useAnimatedStyle(() => ({
+  const _mascotStyle = useAnimatedStyle(() => ({
     transform: [{ scale: mascotScale.value }],
   }));
 

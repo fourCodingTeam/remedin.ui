@@ -1,6 +1,6 @@
-import { theme } from "@/constants/theme";
 import styled, { css } from "styled-components/native";
-import { ButtonVariant } from "./Button.types";
+import { theme } from "@/constants/theme";
+import type { ButtonVariant } from "./Button.types";
 
 export const sizeStyles = {
   sm: css`

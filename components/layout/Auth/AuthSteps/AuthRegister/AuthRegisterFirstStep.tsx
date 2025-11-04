@@ -1,9 +1,11 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Controller, useForm } from "react-hook-form";
 import { InputBase } from "@/components/ui";
 import { StyledText } from "@/components/ui/Common/StyledText";
-import { RegisterFirstStepFormData, registerFirstStepSchema } from "@/validators";
-import { zodResolver } from "@hookform/resolvers/zod";
-import React from "react";
-import { Controller, useForm } from "react-hook-form";
+import {
+  type RegisterFirstStepFormData,
+  registerFirstStepSchema,
+} from "@/validators";
 import {
   GenericStepContainer,
   InputsWrapper,
@@ -15,12 +17,12 @@ import {
 export default function AuthRegisterFirstStep() {
   const {
     control,
-    formState: { errors }
+    formState: { errors },
   } = useForm<RegisterFirstStepFormData>({
     resolver: zodResolver(registerFirstStepSchema),
     defaultValues: {
-      email: ""
-    }
+      email: "",
+    },
   });
 
   return (
@@ -39,16 +41,16 @@ export default function AuthRegisterFirstStep() {
           render={({ field: { onChange, value } }) => (
             <>
               <InputBase
-                placeholder="E-mail"
-                keyboardType="email-address"
                 autoCapitalize="none"
-                prefixIcon="envelope"
                 compact
-                value={value}
+                keyboardType="email-address"
                 onChangeText={onChange}
+                placeholder="E-mail"
+                prefixIcon="envelope"
+                value={value}
               />
               {errors.email && (
-                <StyledText variant="smallRegular" color="muted">
+                <StyledText color="muted" variant="smallRegular">
                   {errors.email.message}
                 </StyledText>
               )}

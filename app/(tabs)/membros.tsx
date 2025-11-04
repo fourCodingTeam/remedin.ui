@@ -1,7 +1,5 @@
-import { Text } from 'react-native';
+import { Text } from "react-native";
 
 export default function MembrosScreen() {
-  return (
-    <Text>Oi 2</Text>
-  );
+  return <Text>Oi 2</Text>;
 }

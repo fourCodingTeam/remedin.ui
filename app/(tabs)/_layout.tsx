@@ -1,7 +1,6 @@
+import { Tabs } from "expo-router";
 import { TabBarIcon } from "@/components/ui";
 import { theme } from "@/constants/theme";
-import { Tabs } from "expo-router";
-import React from "react";
 
 export default function TabLayout() {
   return (
@@ -32,9 +31,9 @@ export default function TabLayout() {
           title: "",
           tabBarIcon: ({ color, focused }) => (
             <TabBarIcon
-              name="home"
               color={color}
               isActive={focused}
+              name="home"
               route="Home"
             />
           ),
@@ -46,9 +45,9 @@ export default function TabLayout() {
           title: "",
           tabBarIcon: ({ color, focused }) => (
             <TabBarIcon
-              name="users"
               color={color}
               isActive={focused}
+              name="users"
               route="Membros"
             />
           ),
@@ -60,9 +59,9 @@ export default function TabLayout() {
           title: "",
           tabBarIcon: ({ color, focused }) => (
             <TabBarIcon
-              name="heart"
               color={color}
               isActive={focused}
+              name="heart"
               route="Saúde"
             />
           ),

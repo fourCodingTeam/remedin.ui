@@ -1,21 +1,33 @@
-import { theme } from "@/constants/theme";
 import styled from "styled-components/native";
+import { theme } from "@/constants/theme";
 
 export const StyledTextVariants = styled.Text<{
   variant: string;
   color: string;
 }>`
   font-family: ${({ variant }) => {
-    if (variant.includes("SemiBold")) return theme.fonts.semiBold;
-    if (variant.includes("Bold")) return theme.fonts.bold;
+    if (variant.includes("SemiBold")) {
+      return theme.fonts.semiBold;
+    }
+    if (variant.includes("Bold")) {
+      return theme.fonts.bold;
+    }
     return theme.fonts.regular;
   }};
 
   font-size: ${({ variant }) => {
-    if (variant.startsWith("small")) return theme.sizes[3];
-    if (variant.startsWith("medium")) return theme.sizes[4];
-    if (variant.startsWith("largest")) return theme.sizes[8];
-    if (variant.startsWith("large")) return theme.sizes[6];
+    if (variant.startsWith("small")) {
+      return theme.sizes[3];
+    }
+    if (variant.startsWith("medium")) {
+      return theme.sizes[4];
+    }
+    if (variant.startsWith("largest")) {
+      return theme.sizes[8];
+    }
+    if (variant.startsWith("large")) {
+      return theme.sizes[6];
+    }
     return theme.sizes["4"];
   }};
 

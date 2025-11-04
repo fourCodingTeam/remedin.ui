@@ -1,12 +1,12 @@
-export interface AuthModalProps {
+export type AuthModalProps = {
   isVisible: boolean;
 
   onClose: () => void;
-}
+};
 
-export interface AuthViewProps {
+export type AuthViewProps = {
   onClose: () => void;
-}
+};
 
 export interface AuthLoginProps extends AuthViewProps {
   onNavigateToRegister: () => void;

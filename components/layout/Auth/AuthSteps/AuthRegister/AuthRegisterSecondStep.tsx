@@ -1,9 +1,11 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Controller, useForm } from "react-hook-form";
 import { InputBase } from "@/components/ui";
 import { StyledText } from "@/components/ui/Common/StyledText";
-import { RegisterSecondStepFormData, registerSecondStepSchema } from "@/validators";
-import { zodResolver } from "@hookform/resolvers/zod";
-import React from "react";
-import { Controller, useForm } from "react-hook-form";
+import {
+  type RegisterSecondStepFormData,
+  registerSecondStepSchema,
+} from "@/validators";
 import {
   GenericStepContainer,
   InputsWrapper,
@@ -15,12 +17,12 @@ import {
 export default function AuthRegisterSecondStep() {
   const {
     control,
-    formState: { errors }
+    formState: { errors },
   } = useForm<RegisterSecondStepFormData>({
     resolver: zodResolver(registerSecondStepSchema),
     defaultValues: {
-      username: ""
-    }
+      username: "",
+    },
   });
 
   return (
@@ -39,15 +41,15 @@ export default function AuthRegisterSecondStep() {
           render={({ field: { onChange, value } }) => (
             <>
               <InputBase
-                placeholder="Seu novo usuário"
                 autoCapitalize="none"
-                prefixIcon="user"
                 compact
-                value={value}
                 onChangeText={onChange}
+                placeholder="Seu novo usuário"
+                prefixIcon="user"
+                value={value}
               />
               {errors.username && (
-                <StyledText variant="smallRegular" color="muted">
+                <StyledText color="muted" variant="smallRegular">
                   {errors.username.message}
                 </StyledText>
               )}

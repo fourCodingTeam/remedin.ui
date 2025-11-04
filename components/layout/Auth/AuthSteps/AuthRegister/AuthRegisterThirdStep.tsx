@@ -1,9 +1,11 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Controller, useForm } from "react-hook-form";
 import { InputBase } from "@/components/ui";
 import { StyledText } from "@/components/ui/Common/StyledText";
-import { RegisterThirdStepFormData, registerThirdStepSchema } from "@/validators";
-import { zodResolver } from "@hookform/resolvers/zod";
-import React from "react";
-import { Controller, useForm } from "react-hook-form";
+import {
+  type RegisterThirdStepFormData,
+  registerThirdStepSchema,
+} from "@/validators";
 import {
   GenericStepContainer,
   InputsWrapper,
@@ -15,13 +17,13 @@ import {
 export default function AuthRegisterThirdStep() {
   const {
     control,
-    formState: { errors }
+    formState: { errors },
   } = useForm<RegisterThirdStepFormData>({
     resolver: zodResolver(registerThirdStepSchema),
     defaultValues: {
       password: "",
-      confirmPassword: ""
-    }
+      confirmPassword: "",
+    },
   });
 
   return (
@@ -40,15 +42,15 @@ export default function AuthRegisterThirdStep() {
           render={({ field: { onChange, value } }) => (
             <>
               <InputBase
-                placeholder="Sua senha"
-                secureTextEntry
-                prefixIcon="lock"
                 compact
-                value={value}
                 onChangeText={onChange}
+                placeholder="Sua senha"
+                prefixIcon="lock"
+                secureTextEntry
+                value={value}
               />
               {errors.password && (
-                <StyledText variant="smallRegular" color="muted">
+                <StyledText color="muted" variant="smallRegular">
                   {errors.password.message}
                 </StyledText>
               )}
@@ -61,15 +63,15 @@ export default function AuthRegisterThirdStep() {
           render={({ field: { onChange, value } }) => (
             <>
               <InputBase
-                placeholder="Confirme sua senha"
-                secureTextEntry
-                prefixIcon="lock"
                 compact
-                value={value}
                 onChangeText={onChange}
+                placeholder="Confirme sua senha"
+                prefixIcon="lock"
+                secureTextEntry
+                value={value}
               />
               {errors.confirmPassword && (
-                <StyledText variant="smallRegular" color="muted">
+                <StyledText color="muted" variant="smallRegular">
                   {errors.confirmPassword.message}
                 </StyledText>
               )}

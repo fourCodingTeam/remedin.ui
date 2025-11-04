@@ -1,8 +1,7 @@
 // Common Components
-export * from './Common';
+export * from "./Common";
 
 // Specific Components
-export * from './Common/Input';
-export * from './MultiSelectTag';
-export * from './TabBarIcon';
-
+export * from "./Common/Input";
+export * from "./MultiSelectTag";
+export * from "./TabBarIcon";

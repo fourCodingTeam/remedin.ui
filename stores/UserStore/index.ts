@@ -1,19 +1,19 @@
 import { create } from "zustand";
-import { UserState } from "./@types";
+import type { UserState } from "./@types";
 
 export const useUserStore = create<UserState>((set) => ({
   userId: null,
-  setUserId: (userId: number | null) => set({ userId: userId }),
+  setUserId: (userId: number | null) => set({ userId }),
   username: null,
-  setUsername: (username: string | null) => set({ username: username }),
+  setUsername: (username: string | null) => set({ username }),
   role: null,
-  setRole: (role: string | null) => set({ role: role }),
+  setRole: (role: string | null) => set({ role }),
   token: null,
-  setToken: (token: string | null) => set({ token: token }),
+  setToken: (token: string | null) => set({ token }),
   email: null,
-  setEmail: (email: string | null) => set({ email: email }),
+  setEmail: (email: string | null) => set({ email }),
   isLoggedIn: false,
-  setIsLoggedIn: (isLoggedIn: boolean) => set({ isLoggedIn: isLoggedIn }),
+  setIsLoggedIn: (isLoggedIn: boolean) => set({ isLoggedIn }),
   isLoggingIn: false,
-  setIsLoggingIn: (isLoggingIn: boolean) => set({ isLoggingIn: isLoggingIn }),
+  setIsLoggingIn: (isLoggingIn: boolean) => set({ isLoggingIn }),
 }));

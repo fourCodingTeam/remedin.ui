@@ -1,6 +1,5 @@
-import React from "react";
 import { StepperContainer, StepSegment } from "./Stepper.styles";
-import { StepperProps } from "./Stepper.types";
+import type { StepperProps } from "./Stepper.types";
 
 export const Stepper = ({ steps, currentStep }: StepperProps) => {
   const totalSteps = Math.max(1, steps);
@@ -14,7 +13,7 @@ export const Stepper = ({ steps, currentStep }: StepperProps) => {
       {stepSegments.map((index) => {
         const isActive = index + 1 <= clampedCurrentStep;
 
-        return <StepSegment key={index} isActive={isActive} />;
+        return <StepSegment isActive={isActive} key={index} />;
       })}
     </StepperContainer>
   );

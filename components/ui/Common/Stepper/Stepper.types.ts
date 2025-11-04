@@ -1,8 +1,8 @@
-export interface StepperProps {
+export type StepperProps = {
   steps: number;
   currentStep: number;
-}
+};
 
-export interface StepSegmentProps {
+export type StepSegmentProps = {
   isActive: boolean;
-}
+};

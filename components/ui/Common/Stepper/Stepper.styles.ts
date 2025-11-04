@@ -1,8 +1,8 @@
 // Components/ui/Common/Stepper/Stepper.styles.ts
 
-import { theme } from "@/constants/theme";
 import styled from "styled-components/native";
-import { StepSegmentProps } from "./Stepper.types";
+import { theme } from "@/constants/theme";
+import type { StepSegmentProps } from "./Stepper.types";
 
 export const StepperContainer = styled.View`
   flex: 1;

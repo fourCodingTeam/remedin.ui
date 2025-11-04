@@ -1,7 +1,7 @@
-import { StyledText } from "@/components/ui";
-import { theme } from "@/constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import styled from "styled-components/native";
+import { StyledText } from "@/components/ui";
+import { theme } from "@/constants/theme";
 
 export const ModalView = styled(SafeAreaView)`
   flex: 1;
@@ -46,7 +46,7 @@ export const InputsWrapper = styled.View`
   display: flex;
   flex-direction: column;
   gap: ${theme.sizes[2]};
-`
+`;
 
 export const StyledTextInput = styled.TextInput`
   border: 1px solid ${theme.colors.border.default};

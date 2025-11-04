@@ -1,1 +1,1 @@
-export * from './MultiSelectTag';
+export * from "./MultiSelectTag";

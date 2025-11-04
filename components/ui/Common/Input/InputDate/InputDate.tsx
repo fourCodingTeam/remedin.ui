@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { InputBase } from "../InputBase";
 import type { InputDateProps } from "./InputData.types";
@@ -20,9 +20,11 @@ export function InputDate({
   const [visible, setVisible] = useState(false);
 
   const parseDateOrNow = (val?: string) => {
-    if (!val) return new Date();
+    if (!val) {
+      return new Date();
+    }
     const parsed = new Date(val);
-    return isNaN(parsed.getTime()) ? new Date() : parsed;
+    return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
   };
 
   const handleConfirm = (date: Date) => {
@@ -31,23 +33,25 @@ export function InputDate({
     onChange?.(formatted);
   };
 
-   return (
+  return (
     <>
       <InputBase
         suffixIcon="calendar"
         {...(rest as any)}
-        value={value}
-        placeholder={placeholder}
         editable={false}
-        onPressIn={() => setVisible(true)} 
+        onPressIn={() => setVisible(true)}
+        placeholder={placeholder}
+        value={value}
       />
 
       <DateTimePickerModal
-        isVisible={visible}
-        mode={mode === "datetime" ? "date" : (mode as "date" | "time" | "datetime")}
         date={parseDateOrNow(value)}
-        onConfirm={handleConfirm}
+        isVisible={visible}
+        mode={
+          mode === "datetime" ? "date" : (mode as "date" | "time" | "datetime")
+        }
         onCancel={() => setVisible(false)}
+        onConfirm={handleConfirm}
       />
     </>
   );

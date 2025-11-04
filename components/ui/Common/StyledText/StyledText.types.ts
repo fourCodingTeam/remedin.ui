@@ -20,9 +20,9 @@ export type StyledTextColor =
   | "dark"
   | "error";
 
-export interface StyledTextProps {
+export type StyledTextProps = {
   variant?: StyledTextVariant;
   color?: StyledTextColor;
   children: React.ReactNode;
   style?: object;
-}
+};

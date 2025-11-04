@@ -1,6 +1,6 @@
-import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { TouchableOpacityProps } from "react-native";
-import { StyledTextVariant } from "../StyledText/StyledText.types";
+import type FontAwesome from "@expo/vector-icons/FontAwesome";
+import type { TouchableOpacityProps } from "react-native";
+import type { StyledTextVariant } from "../StyledText/StyledText.types";
 
 export type ButtonVariant =
   | "black"

@@ -1,7 +1,13 @@
-import { Button, InputBase, InputDate, InputSelect, MultiSelectTag } from "@/components/ui";
-import { TagsMock } from "@/services";
-import React, { useState } from "react";
+import { useState } from "react";
 import { View } from "react-native";
+import {
+  Button,
+  InputBase,
+  InputDate,
+  InputSelect,
+  MultiSelectTag,
+} from "@/components/ui";
+import { TagsMock } from "@/services";
 
 export default function Home() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -16,41 +22,43 @@ export default function Home() {
     });
   };
 
-    const [birth, setBirth] = useState("");
-    const [selected, setSelected] = useState<string | number | undefined>(undefined);
+  const [birth, setBirth] = useState("");
+  const [selected, setSelected] = useState<string | number | undefined>(
+    undefined
+  );
 
-    const options = [
-  { label: "Opção 1", value: "1" },
-  { label: "Opção 2", value: "2" },
-  { label: "Opção 3", value: "3" },
-  { label: "Opção 4", value: "4" },
-  { label: "Opção 5", value: "5" },
-  { label: "Opção 6", value: "6" },
-  { label: "Opção 7", value: "7" },
-  { label: "Opção 8", value: "8" },
-  { label: "Opção 9", value: "9" },
-  { label: "Opção 10", value: "10" },
-  { label: "Opção 11", value: "11" },
-  { label: "Opção 12", value: "12" },
-  { label: "Opção 13", value: "13" },
-  { label: "Opção 14", value: "14" },
-  { label: "Opção 15", value: "15" },
-  { label: "Opção 16", value: "16" },
-  { label: "Opção 17", value: "17" },
-  { label: "Opção 18", value: "18" },
-  { label: "Opção 19", value: "19" },
-  { label: "Opção 20", value: "20" },
-  { label: "Opção 21", value: "21" },
-  { label: "Opção 22", value: "22" },
-  { label: "Opção 23", value: "23" },
-  { label: "Opção 24", value: "24" },
-  { label: "Opção 25", value: "25" },
-  { label: "Opção 26", value: "26" },
-  { label: "Opção 27", value: "27" },
-  { label: "Opção 28", value: "28" },
-  { label: "Opção 29", value: "29" },
-  { label: "Opção 30", value: "30" },
-];
+  const options = [
+    { label: "Opção 1", value: "1" },
+    { label: "Opção 2", value: "2" },
+    { label: "Opção 3", value: "3" },
+    { label: "Opção 4", value: "4" },
+    { label: "Opção 5", value: "5" },
+    { label: "Opção 6", value: "6" },
+    { label: "Opção 7", value: "7" },
+    { label: "Opção 8", value: "8" },
+    { label: "Opção 9", value: "9" },
+    { label: "Opção 10", value: "10" },
+    { label: "Opção 11", value: "11" },
+    { label: "Opção 12", value: "12" },
+    { label: "Opção 13", value: "13" },
+    { label: "Opção 14", value: "14" },
+    { label: "Opção 15", value: "15" },
+    { label: "Opção 16", value: "16" },
+    { label: "Opção 17", value: "17" },
+    { label: "Opção 18", value: "18" },
+    { label: "Opção 19", value: "19" },
+    { label: "Opção 20", value: "20" },
+    { label: "Opção 21", value: "21" },
+    { label: "Opção 22", value: "22" },
+    { label: "Opção 23", value: "23" },
+    { label: "Opção 24", value: "24" },
+    { label: "Opção 25", value: "25" },
+    { label: "Opção 26", value: "26" },
+    { label: "Opção 27", value: "27" },
+    { label: "Opção 28", value: "28" },
+    { label: "Opção 29", value: "29" },
+    { label: "Opção 30", value: "30" },
+  ];
   return (
     <View
       style={{
@@ -61,9 +69,9 @@ export default function Home() {
         gap: 8,
       }}
     >
-      <Button label="Maumau" variant="black" fullWidth />
-      <Button label="Maumau" variant="outline" fullWidth />
-      <Button label="Maumau" variant="primary" fullWidth />
+      <Button fullWidth label="Maumau" variant="black" />
+      <Button fullWidth label="Maumau" variant="outline" />
+      <Button fullWidth label="Maumau" variant="primary" />
 
       <View
         style={{
@@ -72,24 +80,30 @@ export default function Home() {
           gap: 8,
         }}
       >
-        {TagsMock.map((tag, index) => (
+        {TagsMock.map((tag, _index) => (
           <MultiSelectTag
-            id={tag.id}
-            key={index}
-            label={tag.label}
             disabled={tag.disabled}
+            id={tag.id}
             isSelected={selectedTags.includes(tag.label)}
+            key={tag.id}
+            label={tag.label}
             onPress={() => handleSelectTag(tag.label)}
           />
         ))}
       </View>
-      <InputBase prefixIcon="envelope" compact/>
-      <InputDate value={birth} onChange={setBirth} placeholder="Selecione a data" compact/>
-      <InputSelect options={options}
-        value={selected}
-        onChange={setSelected}
-        placeholder="Escolha uma opção"
+      <InputBase compact prefixIcon="envelope" />
+      <InputDate
         compact
+        onChange={setBirth}
+        placeholder="Selecione a data"
+        value={birth}
+      />
+      <InputSelect
+        compact
+        onChange={setSelected}
+        options={options}
+        placeholder="Escolha uma opção"
+        value={selected}
       />
     </View>
   );

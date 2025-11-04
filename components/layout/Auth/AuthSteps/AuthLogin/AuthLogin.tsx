@@ -1,11 +1,10 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Controller, useForm } from "react-hook-form";
 import { InputBase } from "@/components/ui";
 import { Button } from "@/components/ui/Common/Button"; //
 import { StyledText } from "@/components/ui/Common/StyledText";
 import { useUserStore } from "@/stores";
-import { LoginFormData, loginSchema } from "@/validators";
-import { zodResolver } from "@hookform/resolvers/zod";
-import React from "react";
-import { Controller, useForm } from "react-hook-form";
+import { type LoginFormData, loginSchema } from "@/validators";
 import {
   BottomContainer,
   GenericStepContainer,
@@ -15,26 +14,24 @@ import {
   StepTitle,
   TextWrapper,
 } from "../AuthModal.styles";
-import { AuthLoginProps } from "../AuthModal.types";
+import type { AuthLoginProps } from "../AuthModal.types";
 
 export function AuthLogin({ onClose, onNavigateToRegister }: AuthLoginProps) {
   const { setIsLoggedIn } = useUserStore(); //
-  
+
   const {
     control,
     handleSubmit,
-    formState: { errors }
+    formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: "",
-      password: ""
-    }
+      password: "",
+    },
   });
 
-  const handleLoginPress = handleSubmit((data) => {
-    // ... lógica de login aqui ...
-    console.log("Login data:", data);
+  const handleLoginPress = handleSubmit((_data) => {
     // Se der certo:
     setIsLoggedIn(true); //
     onClose();
@@ -58,16 +55,16 @@ export function AuthLogin({ onClose, onNavigateToRegister }: AuthLoginProps) {
               render={({ field: { onChange, value } }) => (
                 <>
                   <InputBase
-                    placeholder="E-mail"
-                    keyboardType="email-address"
                     autoCapitalize="none"
-                    prefixIcon="envelope"
                     compact
-                    value={value}
+                    keyboardType="email-address"
                     onChangeText={onChange}
+                    placeholder="E-mail"
+                    prefixIcon="envelope"
+                    value={value}
                   />
                   {errors.email && (
-                    <StyledText variant="smallRegular" color="error">
+                    <StyledText color="error" variant="smallRegular">
                       {errors.email.message}
                     </StyledText>
                   )}
@@ -80,15 +77,19 @@ export function AuthLogin({ onClose, onNavigateToRegister }: AuthLoginProps) {
               render={({ field: { onChange, value } }) => (
                 <>
                   <InputBase
-                    placeholder="Senha"
-                    secureTextEntry
-                    prefixIcon="lock"
                     compact
-                    value={value}
                     onChangeText={onChange}
+                    placeholder="Senha"
+                    prefixIcon="lock"
+                    secureTextEntry
+                    value={value}
                   />
                   {errors.password && (
-                    <StyledText variant="smallRegular" color="muted" style={{ marginTop: 4 }}>
+                    <StyledText
+                      color="muted"
+                      style={{ marginTop: 4 }}
+                      variant="smallRegular"
+                    >
                       {errors.password.message}
                     </StyledText>
                   )}
@@ -101,17 +102,17 @@ export function AuthLogin({ onClose, onNavigateToRegister }: AuthLoginProps) {
 
       <BottomContainer>
         <Button
-          label="Entrar"
-          variant="black"
           fullWidth
+          label="Entrar"
           onPress={handleLoginPress}
+          variant="black"
         />
         <Button
-          label="Não tem uma conta?"
-          variant="empty"
-          textColor="dark"
           fullWidth
+          label="Não tem uma conta?"
           onPress={onNavigateToRegister}
+          textColor="dark"
+          variant="empty"
         />
       </BottomContainer>
     </>

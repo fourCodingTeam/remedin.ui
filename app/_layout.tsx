@@ -1,8 +1,8 @@
-import { useUserStore } from "@/stores";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
+import { useUserStore } from "@/stores";
 import "react-native-reanimated";
 
 export { ErrorBoundary } from "expo-router";
@@ -27,10 +27,12 @@ export default function RootLayout() {
     FigtreeSemiBoldItalic: require("@/assets/fonts/Figtree-SemiBoldItalic.ttf"),
   });
 
-  const [showSplash, setShowSplash] = useState(true);
+  const [_showSplash, _setShowSplash] = useState(true);
 
   useEffect(() => {
-    if (error) throw error;
+    if (error) {
+      throw error;
+    }
   }, [error]);
 
   useEffect(() => {

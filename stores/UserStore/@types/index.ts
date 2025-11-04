@@ -1,4 +1,4 @@
-export interface UserState {
+export type UserState = {
   isLoggedIn: boolean;
   setIsLoggedIn: (isLoggedIn: boolean) => void;
   isLoggingIn: boolean;
@@ -13,4 +13,4 @@ export interface UserState {
   setRole: (role: string | null) => void;
   token: string | null;
   setToken: (token: string | null) => void;
-}
+};

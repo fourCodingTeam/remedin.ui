@@ -1,9 +1,8 @@
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import React from "react";
 import { ActivityIndicator } from "react-native";
 import { StyledText } from "../StyledText";
 import { ButtonWrapper } from "./Button.styles";
-import { ButtonProps, ButtonVariant } from "./Button.types";
+import type { ButtonProps, ButtonVariant } from "./Button.types";
 
 export function Button({
   label,
@@ -29,22 +28,26 @@ export function Button({
         return "dark";
       case "neutral":
         return "muted";
+      default:
+        return "dark";
     }
   };
 
   const renderIcon = (iconName: typeof icon) => {
-    if (!iconName) return null;
-    return <FontAwesome name={iconName} size={16} color="#fff" />;
+    if (!iconName) {
+      return null;
+    }
+    return <FontAwesome color="#fff" name={iconName} size={16} />;
   };
 
   return (
     <ButtonWrapper
+      activeOpacity={0.7}
       disabled={disabled || isLoading}
       fullWidth={fullWidth}
-      variant={variant}
-      size={size}
-      activeOpacity={0.7}
       onPress={onPress}
+      size={size}
+      variant={variant}
     >
       {isLoading ? (
         <ActivityIndicator color="#fff" />

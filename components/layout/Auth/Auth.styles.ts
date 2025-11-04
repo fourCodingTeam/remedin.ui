@@ -1,5 +1,5 @@
-import { theme } from "@/constants/theme";
 import styled from "styled-components/native";
+import { theme } from "@/constants/theme";
 
 export const StyledView = styled.View`
   flex: 1;
@@ -20,4 +20,4 @@ export const ButtonsWrapper = styled.View`
   paddingVertical: ${theme.sizes[6]};
   paddingHorizontal: ${theme.sizes[4]};
   gap: 8px;
-`
+`;

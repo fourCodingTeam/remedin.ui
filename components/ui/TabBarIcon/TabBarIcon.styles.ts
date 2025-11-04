@@ -1,5 +1,5 @@
-import { theme } from "@/constants/theme";
 import styled from "styled-components/native";
+import { theme } from "@/constants/theme";
 
 export const IconWrapper = styled.View<{ isActive: boolean }>`
   display: flex;
@@ -10,8 +10,7 @@ export const IconWrapper = styled.View<{ isActive: boolean }>`
   gap: ${theme.sizes[1]};
 
   background-color: ${theme.colors.common.black};
-  border: ${({ isActive }) =>
-    isActive ? `1px solid ${theme.colors.accent.primary}` : "none"};
+  border: ${({ isActive }) => (isActive ? `1px solid ${theme.colors.accent.primary}` : "none")};
   border-radius: ${theme.sizes[4]};
 
   width: 100%;
