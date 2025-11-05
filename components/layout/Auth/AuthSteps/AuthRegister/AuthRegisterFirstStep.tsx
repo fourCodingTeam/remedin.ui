@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { forwardRef, useImperativeHandle } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { InputBase } from "@/components/ui";
 import { StyledText } from "@/components/ui/Common/StyledText";
@@ -14,16 +15,35 @@ import {
   TextWrapper,
 } from "../AuthModal.styles";
 
-export default function AuthRegisterFirstStep() {
+export type AuthRegisterFirstStepRef = {
+  validate: () => Promise<boolean>;
+  getData: () => RegisterFirstStepFormData | null;
+};
+
+// biome-ignore lint: forwardRef is required for imperative handle pattern
+const AuthRegisterFirstStep = forwardRef<AuthRegisterFirstStepRef>((_, ref) => {
   const {
     control,
     formState: { errors },
+    trigger,
+    getValues,
   } = useForm<RegisterFirstStepFormData>({
     resolver: zodResolver(registerFirstStepSchema),
     defaultValues: {
       email: "",
     },
   });
+
+  useImperativeHandle(ref, () => ({
+    validate: async () => {
+      const isValid = await trigger();
+      return isValid;
+    },
+    getData: () => {
+      const isValid = Object.keys(errors).length === 0;
+      return isValid ? getValues() : null;
+    },
+  }));
 
   return (
     <GenericStepContainer>
@@ -50,7 +70,7 @@ export default function AuthRegisterFirstStep() {
                 value={value}
               />
               {errors.email && (
-                <StyledText color="muted" variant="smallRegular">
+                <StyledText color="error" variant="mediumRegular">
                   {errors.email.message}
                 </StyledText>
               )}
@@ -60,4 +80,8 @@ export default function AuthRegisterFirstStep() {
       </InputsWrapper>
     </GenericStepContainer>
   );
-}
+});
+
+AuthRegisterFirstStep.displayName = "AuthRegisterFirstStep";
+
+export default AuthRegisterFirstStep;

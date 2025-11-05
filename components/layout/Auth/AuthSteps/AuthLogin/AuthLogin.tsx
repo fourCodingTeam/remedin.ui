@@ -79,7 +79,7 @@ export function AuthLogin({ onClose, onNavigateToRegister }: AuthLoginProps) {
                     value={value}
                   />
                   {errors.email && (
-                    <StyledText color="error" variant="smallRegular">
+                    <StyledText color="error" variant="mediumRegular">
                       {errors.email.message}
                     </StyledText>
                   )}
@@ -101,9 +101,9 @@ export function AuthLogin({ onClose, onNavigateToRegister }: AuthLoginProps) {
                   />
                   {errors.password && (
                     <StyledText
-                      color="muted"
+                      color="error"
                       style={{ marginTop: 4 }}
-                      variant="smallRegular"
+                      variant="mediumRegular"
                     >
                       {errors.password.message}
                     </StyledText>
@@ -115,7 +115,7 @@ export function AuthLogin({ onClose, onNavigateToRegister }: AuthLoginProps) {
               <StyledText
                 color="error"
                 style={{ marginTop: 8 }}
-                variant="smallRegular"
+                variant="mediumRegular"
               >
                 {authError}
               </StyledText>

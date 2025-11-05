@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { forwardRef, useImperativeHandle, useState } from "react";
 import { StyledText } from "@/components/ui/Common/StyledText";
 import { MultiSelectTag } from "@/components/ui/MultiSelectTag";
 import { theme } from "@/constants/theme";
@@ -26,83 +26,97 @@ const afterOptions = [
   { id: 10, label: "1 hora" },
 ];
 
-export default function AuthRegisterFourthStep() {
-  // CORREÇÃO: Alterado o estado para 'number[]' (array) para multiselect
-  const [selectedBefore, setSelectedBefore] = useState<number[]>([]);
-  const [selectedAfter, setSelectedAfter] = useState<number[]>([]);
+export type AuthRegisterFourthStepRef = {
+  validate: () => Promise<boolean>;
+  getData: () => { selectedBefore: number[]; selectedAfter: number[] } | null;
+};
 
-  // CORREÇÃO: Handler para "Antes"
-  const handleToggleBefore = (id: number) => {
-    setSelectedBefore((prev) => {
-      // Se o ID já está no array, remove
-      if (prev.includes(id)) {
-        return prev.filter((currentId) => currentId !== id);
-      }
-      // Se não, adiciona
+// biome-ignore lint: forwardRef is required for imperative handle pattern
+const AuthRegisterFourthStep = forwardRef<AuthRegisterFourthStepRef>(
+  (_, ref) => {
+    const [selectedBefore, setSelectedBefore] = useState<number[]>([]);
+    const [selectedAfter, setSelectedAfter] = useState<number[]>([]);
 
-      return [...prev, id];
-    });
-  };
+    useImperativeHandle(ref, () => ({
+      validate: () => {
+        // Fourth step is optional, always valid
+        return Promise.resolve(true);
+      },
+      getData: () => ({
+        selectedBefore,
+        selectedAfter,
+      }),
+    }));
 
-  // CORREÇÃO: Handler para "Depois"
-  const handleToggleAfter = (id: number) => {
-    setSelectedAfter((prev) => {
-      // Se o ID já está no array, remove
-      if (prev.includes(id)) {
-        return prev.filter((currentId) => currentId !== id);
-      }
-      // Se não, adiciona
+    const handleToggleBefore = (id: number) => {
+      setSelectedBefore((prev) => {
+        if (prev.includes(id)) {
+          return prev.filter((currentId) => currentId !== id);
+        }
+        return [...prev, id];
+      });
+    };
 
-      return [...prev, id];
-    });
-  };
+    const handleToggleAfter = (id: number) => {
+      setSelectedAfter((prev) => {
+        if (prev.includes(id)) {
+          return prev.filter((currentId) => currentId !== id);
+        }
+        return [...prev, id];
+      });
+    };
 
-  return (
-    <GenericStepContainer>
-      <TextWrapper>
-        <StepTitle>Defina seus lembretes</StepTitle>
-        <StepDescription>
-          Escolha aqui o intervalo em que seus lembretes vão soar!
-        </StepDescription>
-      </TextWrapper>
+    return (
+      <GenericStepContainer>
+        <TextWrapper>
+          <StepTitle>Defina seus lembretes</StepTitle>
+          <StepDescription>
+            Escolha aqui o intervalo em que seus lembretes vão soar!
+          </StepDescription>
+        </TextWrapper>
 
-      <StyledText
-        color="black"
-        style={{ marginBottom: theme.sizes[4] }}
-        variant="mediumSemiBold"
-      >
-        Antes de tomar o remédio, desde quando quer ser avisado?
-      </StyledText>
-      <TagRow>
-        {beforeOptions.map((opt) => (
-          <MultiSelectTag
-            id={opt.id}
-            isSelected={selectedBefore.includes(opt.id)}
-            key={opt.id}
-            label={opt.label}
-            onPress={() => handleToggleBefore(opt.id)}
-          />
-        ))}
-      </TagRow>
+        <StyledText
+          color="black"
+          style={{ marginBottom: theme.sizes[4] }}
+          variant="mediumSemiBold"
+        >
+          Antes de tomar o remédio, desde quando quer ser avisado?
+        </StyledText>
+        <TagRow>
+          {beforeOptions.map((opt) => (
+            <MultiSelectTag
+              id={opt.id}
+              isSelected={selectedBefore.includes(opt.id)}
+              key={opt.id}
+              label={opt.label}
+              onPress={() => handleToggleBefore(opt.id)}
+            />
+          ))}
+        </TagRow>
 
-      <StyledText
-        color="black"
-        style={{ marginBottom: theme.sizes[4] }}
-        variant="mediumSemiBold"
-      >
-        Se esquecer, quando gostaria de ser lembrado?
-      </StyledText>
-      <TagRow>
-        {afterOptions.map((opt) => (
-          <MultiSelectTag
-            id={opt.id}
-            isSelected={selectedAfter.includes(opt.id)}
-            key={opt.id}
-            label={opt.label}
-            onPress={() => handleToggleAfter(opt.id)}
-          />
-        ))}
-      </TagRow>
-    </GenericStepContainer>
-  );
-}
+        <StyledText
+          color="black"
+          style={{ marginBottom: theme.sizes[4] }}
+          variant="mediumSemiBold"
+        >
+          Se esquecer, quando gostaria de ser lembrado?
+        </StyledText>
+        <TagRow>
+          {afterOptions.map((opt) => (
+            <MultiSelectTag
+              id={opt.id}
+              isSelected={selectedAfter.includes(opt.id)}
+              key={opt.id}
+              label={opt.label}
+              onPress={() => handleToggleAfter(opt.id)}
+            />
+          ))}
+        </TagRow>
+      </GenericStepContainer>
+    );
+  }
+);
+
+AuthRegisterFourthStep.displayName = "AuthRegisterFourthStep";
+
+export default AuthRegisterFourthStep;

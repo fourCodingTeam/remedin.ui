@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { signInWithGoogle } from "@/auth/signIn";
 import { Button } from "@/components/ui";
 import { ButtonsWrapper, StyledImage, StyledView } from "./Auth.styles";
 import { AuthModal } from "./AuthSteps";
@@ -16,6 +17,10 @@ export function Auth() {
     // e navegar para a home se o login foi bem-sucedido.
   };
 
+  const handlePressGoogleLogin = () => {
+    signInWithGoogle();
+  };
+
   return (
     <StyledView>
       <StyledImage
@@ -27,6 +32,7 @@ export function Auth() {
         <Button
           icon="google"
           label="Login com o Google"
+          onPress={handlePressGoogleLogin}
           textColor="light"
           variant="outline"
         />

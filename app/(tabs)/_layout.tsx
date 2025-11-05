@@ -6,22 +6,21 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: theme.colors.accent.primary,
+        tabBarActiveTintColor: theme.colors.common.black,
         headerShown: false,
         tabBarStyle: {
-          height: 99,
+          height: 72,
           display: "flex",
           justifyContent: "space-between",
           paddingHorizontal: 3,
-          borderTopRightRadius: 16,
-          borderTopLeftRadius: 16,
           bottom: -1, // o borderRadius faz ele adicionar uma linha invisível embaixo, por isso o bottom -1
-          backgroundColor: theme.colors.common.black,
+          backgroundColor: theme.colors.background.default,
+          elevation: 0,
         },
         tabBarIconStyle: {
           width: "100%",
-          height: 36,
-          marginTop: 12,
+          height: 48,
+          marginTop: 7,
         },
       }}
     >
@@ -35,6 +34,7 @@ export default function TabLayout() {
               isActive={focused}
               name="home"
               route="Home"
+              size={24}
             />
           ),
         }}
@@ -49,6 +49,7 @@ export default function TabLayout() {
               isActive={focused}
               name="users"
               route="Membros"
+              size={20}
             />
           ),
         }}
@@ -63,6 +64,7 @@ export default function TabLayout() {
               isActive={focused}
               name="heart"
               route="Saúde"
+              size={20}
             />
           ),
         }}

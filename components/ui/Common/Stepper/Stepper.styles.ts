@@ -13,7 +13,7 @@ export const StepperContainer = styled.View`
 
 export const StepSegment = styled.View<StepSegmentProps>`
   flex: 1;
-  height: 1px;
+  height: 1.5px;
   background-color: ${({ isActive }) =>
     isActive ? theme.colors.text.default : theme.colors.border.muted};
 `;
