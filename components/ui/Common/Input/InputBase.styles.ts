@@ -5,10 +5,12 @@ import { theme } from "@/constants/theme";
 type InputBaseWrapperProps = {
   isActive: boolean;
   isCompact?: boolean;
+  enableFlexOne?: boolean;
 };
 
 export const InputBaseWrapper = styled.View<InputBaseWrapperProps>`
-    width: auto;
+    flex: ${({ enableFlexOne }) => (enableFlexOne ? 1 : "none")};
+    width: 100%;
     flex-direction: row;
     align-items: center;
     border-radius: ${theme.borderRadius[2]};

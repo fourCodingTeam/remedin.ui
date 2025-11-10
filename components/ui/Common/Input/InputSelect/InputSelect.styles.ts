@@ -3,9 +3,9 @@ import { theme } from "@/constants/theme";
 
 export const Backdrop = styled.TouchableOpacity`
 	flex: 1;
-	background-color: ${theme.colors.common.blackFaded};
 	justify-content: center;
-	padding: 20px;
+	background-color: ${theme.colors.common.blackFaded}60;
+	padding: 16px;
 `;
 
 export const Container = styled.View`
@@ -16,7 +16,7 @@ export const Container = styled.View`
 `;
 
 export const Item = styled.TouchableOpacity`
-	padding: ${theme.sizes[2]} ${theme.sizes[3]};
+	padding: ${theme.sizes[3]} ${theme.sizes[4]};
 	border-bottom-color: #eee;
 	border-bottom-width: 1px;
 `;

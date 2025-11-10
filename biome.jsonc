@@ -20,7 +20,8 @@
         "noShadow": "off"
       },
       "suspicious": {
-        "noExplicitAny": "warn"
+        "noExplicitAny": "warn",
+        "noArrayIndexKey": "off"
       }
     }
   }

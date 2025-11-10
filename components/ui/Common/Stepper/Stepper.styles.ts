@@ -1,5 +1,3 @@
-// Components/ui/Common/Stepper/Stepper.styles.ts
-
 import styled from "styled-components/native";
 import { theme } from "@/constants/theme";
 import type { StepSegmentProps } from "./Stepper.types";
@@ -13,7 +11,7 @@ export const StepperContainer = styled.View`
 
 export const StepSegment = styled.View<StepSegmentProps>`
   flex: 1;
-  height: 1px;
+  height: 1.5px;
   background-color: ${({ isActive }) =>
     isActive ? theme.colors.text.default : theme.colors.border.muted};
 `;

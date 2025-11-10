@@ -1,8 +1,9 @@
-import type FontAwesome from "@expo/vector-icons/FontAwesome";
+export type TabBarIconName = "home" | "users" | "heart";
 
 export type TabBarIconProps = {
-  name: React.ComponentProps<typeof FontAwesome>["name"];
+  name: TabBarIconName;
   color: string;
   route?: string;
   isActive: boolean;
+  size?: number;
 };

@@ -11,7 +11,7 @@ export const theme = {
     },
     text: {
       default: "#1A1A1A",
-      muted: "#737373",
+      muted: "#939393",
     },
     border: {
       default: "#CCCCCC",

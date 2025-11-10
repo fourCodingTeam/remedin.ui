@@ -4,16 +4,13 @@ import type { ButtonVariant } from "./Button.types";
 
 export const sizeStyles = {
   sm: css`
-    padding-vertical: 8px;
-    padding-horizontal: 12px;
+    padding: ${theme.sizes[2]} ${theme.sizes[3]};
   `,
   md: css`
-    padding-vertical: 12px;
-    padding-horizontal: 16px;
+    padding: ${theme.sizes[3]} ${theme.sizes[4]};
   `,
   lg: css`
-    padding-vertical: 16px;
-    padding-horizontal: 20px;
+    padding: ${theme.sizes[4]} ${theme.sizes[5]};
   `,
 };
 

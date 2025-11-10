@@ -9,19 +9,22 @@ export const IconWrapper = styled.View<{ isActive: boolean }>`
   text-align: center;
   gap: ${theme.sizes[1]};
 
-  background-color: ${theme.colors.common.black};
-  border: ${({ isActive }) => (isActive ? `1px solid ${theme.colors.accent.primary}` : "none")};
-  border-radius: ${theme.sizes[4]};
+  border-radius: ${theme.borderRadius[4]};
+  background-color: ${({ isActive }) => (isActive ? theme.colors.accent.primary : "transparent")};
 
   width: 100%;
-  height: 150%;
+  height: 120%;
 `;
 
-export const StyledTabBarLabel = styled.Text<{ isActive: boolean }>`
+export const StyledTabBarLabel = styled.Text<{
+  isActive: boolean;
+  showText?: boolean;
+}>`
+  display: ${({ showText }) => (showText ? "block" : "none")};
   color: ${({ isActive }) =>
-    isActive ? theme.colors.accent.primary : theme.colors.background.light};
-  font-family: ${theme.fonts.regular};
-  width: 100%;
-  font-size: 12px;
-  text-align: center;
+    isActive ? theme.colors.common.black : theme.colors.text.muted};
+    font-family: ${theme.fonts.regular};
+    width: 100%;
+    font-size: 12px;
+    text-align: center;
 `;

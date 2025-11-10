@@ -1,9 +1,14 @@
+import { router } from "expo-router";
+import { LogIn } from "lucide-react-native";
 import { useState } from "react";
+import { signInWithGoogle } from "@/auth/signIn";
 import { Button } from "@/components/ui";
+import { useUserStore } from "@/stores/UserStore";
 import { ButtonsWrapper, StyledImage, StyledView } from "./Auth.styles";
 import { AuthModal } from "./AuthSteps";
 
 export function Auth() {
+  const { token, signOut } = useUserStore();
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   const handlePressLogIn = () => {
@@ -11,9 +16,17 @@ export function Auth() {
   };
 
   const handleCloseModal = () => {
+    if (token) {
+      router.push("/(tabs)");
+    } else {
+      router.replace("/auth");
+    }
     setIsModalVisible(false);
-    // Aqui você poderia, por exemplo, verificar o useUserStore
-    // e navegar para a home se o login foi bem-sucedido.
+  };
+
+  const handlePressGoogleLogin = async () => {
+    signOut();
+    await signInWithGoogle();
   };
 
   return (
@@ -25,8 +38,9 @@ export function Auth() {
       <ButtonsWrapper>
         <Button label="Entrar" onPress={handlePressLogIn} variant="primary" />
         <Button
-          icon="google"
+          icon={LogIn}
           label="Login com o Google"
+          onPress={handlePressGoogleLogin}
           textColor="light"
           variant="outline"
         />

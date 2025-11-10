@@ -7,4 +7,5 @@ export type InputBaseProps = React.ComponentProps<typeof TextInput> & {
   prefixIcon?: React.ComponentProps<typeof FontAwesome>["name"];
   compact?: boolean;
   onPressIn?: () => void;
+  enableFlexOne?: boolean;
 };

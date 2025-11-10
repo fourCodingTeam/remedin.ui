@@ -1,86 +1,208 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
-import { View } from "react-native";
-import { Button } from "@/components/ui/Common/Button"; //
-import { Stepper } from "@/components/ui/Common/Stepper";
+import { Controller, useForm } from "react-hook-form";
+import { signUp } from "@/auth/signUp";
+import { InputBase } from "@/components/ui";
+import { Button } from "@/components/ui/Common/Button";
+import { StyledText } from "@/components/ui/Common/StyledText";
 import { theme } from "@/constants/theme";
-import { BottomContainer, ModalContent } from "../AuthModal.styles";
+import { useUserStore } from "@/stores";
+import { type RegisterFormData, registerSchema } from "@/validators";
+import {
+  BottomContainer,
+  GenericStepContainer,
+  InputsWrapper,
+  ModalContent,
+  StepDescription,
+  StepTitle,
+  TextWrapper,
+} from "../AuthModal.styles";
 import type { AuthRegisterProps } from "../AuthModal.types";
-import AuthRegisterFirstStep from "./AuthRegisterFirstStep";
-import AuthRegisterFourthStep from "./AuthRegisterFourthStep";
-import AuthRegisterSecondStep from "./AuthRegisterSecondStep";
-import AuthRegisterThirdStep from "./AuthRegisterThirdStep";
 
-const TOTAL_STEPS = 4;
+const getErrorMessage = (err: unknown): string => {
+  if (err instanceof Error) {
+    return err.message;
+  }
+  if (err && typeof err === "object" && "message" in err) {
+    return String((err as { message: unknown }).message);
+  }
+  return "Erro ao criar conta. Tente novamente.";
+};
 
 export function AuthRegister({
   onClose,
   onNavigateToLogin,
 }: AuthRegisterProps) {
-  const [step, setStep] = useState(1);
+  const { setIsLoggedIn, setEmail, setUsername } = useUserStore();
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const nextStep = () => {
-    setStep((s) => Math.min(s + 1, TOTAL_STEPS));
-  };
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      email: "",
+      username: "",
+      password: "",
+      confirmPassword: "",
+    },
+    mode: "onChange",
+    reValidateMode: "onChange",
+  });
 
-  const handleAdvance = () => {
-    if (step === TOTAL_STEPS) {
-      // ... lógica de finalizar cadastro ...
+  const handleRegisterPress = handleSubmit(async (data) => {
+    try {
+      setAuthError(null);
+      setIsSubmitting(true);
+
+      await signUp(data.email, data.password);
+
+      setEmail(data.email);
+      setUsername(data.username);
+      setIsLoggedIn(true);
       onClose();
-    } else {
-      nextStep();
+    } catch (err) {
+      const errorMessage = getErrorMessage(err);
+      setAuthError(errorMessage);
+    } finally {
+      setIsSubmitting(false);
     }
-  };
-
-  const renderStep = () => {
-    switch (step) {
-      case 1:
-        return <AuthRegisterFirstStep />;
-      case 2:
-        return <AuthRegisterSecondStep />;
-      case 3:
-        return <AuthRegisterThirdStep />;
-      case 4:
-        return <AuthRegisterFourthStep />;
-      default:
-        return null;
-    }
-  };
+  });
 
   return (
     <>
       <ModalContent>
-        <View style={{ gap: theme.sizes[4] }}>
-          <Stepper currentStep={step} steps={TOTAL_STEPS} />
-        </View>
+        <GenericStepContainer>
+          <TextWrapper>
+            <StepTitle>Crie sua conta</StepTitle>
+            <StepDescription>
+              Preencha seus dados de acesso e personalize seus lembretes.
+            </StepDescription>
+          </TextWrapper>
 
-        {renderStep()}
+          <InputsWrapper>
+            <Controller
+              control={control}
+              name="email"
+              render={({ field: { onChange, value } }) => (
+                <>
+                  <InputBase
+                    autoCapitalize="none"
+                    compact
+                    keyboardType="email-address"
+                    onChangeText={onChange}
+                    placeholder="E-mail"
+                    prefixIcon="envelope"
+                    value={value}
+                  />
+                  {errors.email && (
+                    <StyledText color="error" variant="mediumRegular">
+                      {errors.email.message}
+                    </StyledText>
+                  )}
+                </>
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="username"
+              render={({ field: { onChange, value } }) => (
+                <>
+                  <InputBase
+                    autoCapitalize="none"
+                    compact
+                    onChangeText={onChange}
+                    placeholder="Usuário"
+                    prefixIcon="user"
+                    value={value}
+                  />
+                  {errors.username && (
+                    <StyledText color="error" variant="mediumRegular">
+                      {errors.username.message}
+                    </StyledText>
+                  )}
+                </>
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="password"
+              render={({ field: { onChange, value } }) => (
+                <>
+                  <InputBase
+                    compact
+                    onChangeText={onChange}
+                    placeholder="Senha"
+                    prefixIcon="lock"
+                    secureTextEntry
+                    value={value}
+                  />
+                  {errors.password && (
+                    <StyledText color="error" variant="mediumRegular">
+                      {errors.password.message}
+                    </StyledText>
+                  )}
+                </>
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="confirmPassword"
+              render={({ field: { onChange, value } }) => (
+                <>
+                  <InputBase
+                    compact
+                    onChangeText={onChange}
+                    placeholder="Confirme a senha"
+                    prefixIcon="lock"
+                    secureTextEntry
+                    value={value}
+                  />
+                  {errors.confirmPassword && (
+                    <StyledText color="error" variant="mediumRegular">
+                      {errors.confirmPassword.message}
+                    </StyledText>
+                  )}
+                </>
+              )}
+            />
+          </InputsWrapper>
+
+          {authError && (
+            <StyledText
+              color="error"
+              style={{ marginTop: theme.sizes[3] }}
+              variant="mediumRegular"
+            >
+              {authError}
+            </StyledText>
+          )}
+        </GenericStepContainer>
       </ModalContent>
 
       <BottomContainer>
         <Button
+          disabled={isSubmitting}
           fullWidth
-          label="Avançar"
-          onPress={handleAdvance}
+          isLoading={isSubmitting}
+          label="Criar conta"
+          onPress={handleRegisterPress}
           variant="black"
         />
-        {step === TOTAL_STEPS && (
-          <Button
-            fullWidth
-            label="Pular"
-            onPress={onClose}
-            textColor="dark"
-            variant="empty"
-          />
-        )}
-        {step === 1 && (
-          <Button
-            fullWidth
-            label="Já tem uma conta?"
-            onPress={onNavigateToLogin}
-            textColor="dark"
-            variant="empty"
-          />
-        )}
+        <Button
+          disabled={isSubmitting}
+          fullWidth
+          label="Já tem uma conta?"
+          onPress={onNavigateToLogin}
+          textColor="dark"
+          variant="empty"
+        />
       </BottomContainer>
     </>
   );

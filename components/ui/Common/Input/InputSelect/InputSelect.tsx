@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { FlatList, Modal } from "react-native";
+import { StyledText } from "../..";
 import { InputBase } from "../InputBase";
-import { Backdrop, Container, Item, ItemText } from "./InputSelect.styles";
+import { Backdrop, Container, Item } from "./InputSelect.styles";
 import type { InputSelectProps, Option } from "./InputSelect.types";
 
 export function InputSelect({
@@ -30,6 +31,7 @@ export function InputSelect({
         editable={false}
         onPressIn={() => setVisible(true)}
         placeholder={placeholder}
+        suffixIcon="chevron-down"
         value={selectedLabel}
       />
 
@@ -39,15 +41,18 @@ export function InputSelect({
         transparent
         visible={visible}
       >
-        <Backdrop activeOpacity={1} onPress={() => setVisible(true)}>
+        <Backdrop onPress={() => setVisible(false)}>
           <Container>
             <FlatList
+              contentContainerStyle={{
+                paddingBottom: 16,
+              }}
               data={options}
               keyboardShouldPersistTaps="handled"
               keyExtractor={(item) => String(item.value)}
               renderItem={({ item }) => (
                 <Item onPress={() => handleSelect(item)}>
-                  <ItemText>{item.label}</ItemText>
+                  <StyledText variant="mediumRegular">{item.label}</StyledText>
                 </Item>
               )}
             />
