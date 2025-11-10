@@ -1,5 +1,3 @@
-// Components/ui/Common/Stepper/Stepper.styles.ts
-
 import styled from "styled-components/native";
 import { theme } from "@/constants/theme";
 import type { StepSegmentProps } from "./Stepper.types";

@@ -16,11 +16,15 @@ export const IconWrapper = styled.View<{ isActive: boolean }>`
   height: 120%;
 `;
 
-export const StyledTabBarLabel = styled.Text<{ isActive: boolean }>`
+export const StyledTabBarLabel = styled.Text<{
+  isActive: boolean;
+  showText?: boolean;
+}>`
+  display: ${({ showText }) => (showText ? "block" : "none")};
   color: ${({ isActive }) =>
     isActive ? theme.colors.common.black : theme.colors.text.muted};
-  font-family: ${theme.fonts.regular};
-  width: 100%;
-  font-size: 12px;
-  text-align: center;
+    font-family: ${theme.fonts.regular};
+    width: 100%;
+    font-size: 12px;
+    text-align: center;
 `;

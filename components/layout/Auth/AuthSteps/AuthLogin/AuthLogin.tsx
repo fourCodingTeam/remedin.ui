@@ -19,7 +19,7 @@ import {
 import type { AuthLoginProps } from "../AuthModal.types";
 
 export function AuthLogin({ onClose, onNavigateToRegister }: AuthLoginProps) {
-  const { setIsLoggedIn } = useUserStore();
+  const { setIsLoggedIn, setUsername, setEmail, setToken } = useUserStore();
 
   const [authError, setAuthError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,7 +41,11 @@ export function AuthLogin({ onClose, onNavigateToRegister }: AuthLoginProps) {
       setAuthError(null);
       setIsSubmitting(true);
 
-      await signInWithEmail(data.email, data.password);
+      const response = await signInWithEmail(data.email, data.password);
+
+      setUsername(response.user.user_metadata.username);
+      setEmail(data.email);
+      setToken(response.session.access_token);
 
       setIsLoggedIn(true);
       onClose();
@@ -127,6 +131,7 @@ export function AuthLogin({ onClose, onNavigateToRegister }: AuthLoginProps) {
       <BottomContainer>
         <Button
           fullWidth
+          isLoading={isSubmitting}
           label="Entrar"
           onPress={handleLoginPress}
           variant="black"

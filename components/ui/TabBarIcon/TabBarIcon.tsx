@@ -20,7 +20,9 @@ export function TabBarIcon({
   return (
     <IconWrapper isActive={isActive}>
       <IconComponent color={color} size={size} />
-      <StyledTabBarLabel isActive={isActive}>{route}</StyledTabBarLabel>
+      <StyledTabBarLabel isActive={isActive} showText={!isActive}>
+        {route}
+      </StyledTabBarLabel>
     </IconWrapper>
   );
 }

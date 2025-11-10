@@ -13,4 +13,5 @@ export type UserState = {
   setRole: (role: string | null) => void;
   token: string | null;
   setToken: (token: string | null) => void;
+  signOut: () => void;
 };

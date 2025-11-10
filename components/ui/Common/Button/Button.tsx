@@ -1,8 +1,33 @@
-import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { ActivityIndicator } from "react-native";
+import { theme } from "@/constants/theme";
 import { StyledText } from "../StyledText";
+import type { StyledTextColor } from "../StyledText/StyledText.types";
 import { ButtonWrapper } from "./Button.styles";
-import type { ButtonProps, ButtonVariant } from "./Button.types";
+import type { ButtonProps, ButtonSize, ButtonVariant } from "./Button.types";
+
+const iconSizes: Record<ButtonSize, number> = {
+  sm: 16,
+  md: 18,
+  lg: 20,
+};
+
+const getColorValueByStyledTextColor = (color: StyledTextColor) => {
+  switch (color) {
+    case "muted":
+      return theme.colors.text.muted;
+    case "black":
+      return theme.colors.common.black;
+    case "light":
+      return theme.colors.background.light;
+    case "dark":
+    case "default":
+      return theme.colors.text.default;
+    case "error":
+      return theme.colors.warnings.danger;
+    default:
+      return theme.colors.text.default;
+  }
+};
 
 export function Button({
   label,
@@ -15,6 +40,7 @@ export function Button({
   textColor,
   icon,
   onPress,
+  ...rest
 }: ButtonProps) {
   const getTextColorByButtonVariant = (variant: ButtonVariant) => {
     switch (variant) {
@@ -33,12 +59,12 @@ export function Button({
     }
   };
 
-  const renderIcon = (iconName: typeof icon) => {
-    if (!iconName) {
-      return null;
-    }
-    return <FontAwesome color="#fff" name={iconName} size={16} />;
-  };
+  const resolvedVariant = variant || "primary";
+  const resolvedButtonSize = size || "md";
+  const resolvedTextColor =
+    textColor || getTextColorByButtonVariant(resolvedVariant);
+  const iconColor = getColorValueByStyledTextColor(resolvedTextColor);
+  const IconComponent = icon;
 
   return (
     <ButtonWrapper
@@ -48,18 +74,19 @@ export function Button({
       onPress={onPress}
       size={size}
       variant={variant}
+      {...rest}
     >
       {isLoading ? (
         <ActivityIndicator color="#fff" />
       ) : (
         <>
-          {renderIcon(icon)}
-          <StyledText
-            color={
-              textColor || getTextColorByButtonVariant(variant || "primary")
-            }
-            variant={textSize}
-          >
+          {IconComponent ? (
+            <IconComponent
+              color={iconColor}
+              size={iconSizes[resolvedButtonSize]}
+            />
+          ) : null}
+          <StyledText color={resolvedTextColor} variant={textSize}>
             {label}
           </StyledText>
         </>

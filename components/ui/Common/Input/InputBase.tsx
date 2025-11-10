@@ -27,7 +27,11 @@ export const InputBase: React.FC<InputBaseProps> = (props) => {
   };
 
   return (
-    <InputBaseWrapper isActive={isFocused} isCompact={props.compact}>
+    <InputBaseWrapper
+      enableFlexOne={props.enableFlexOne ?? false}
+      isActive={isFocused}
+      isCompact={props.compact ?? true}
+    >
       <Pressable
         disabled={props.editable === false ? false : undefined}
         onPressIn={props.onPressIn}
@@ -42,6 +46,7 @@ export const InputBase: React.FC<InputBaseProps> = (props) => {
         )}
         <InputStyle
           {...props}
+          autoCapitalize="none"
           onBlur={onBlur}
           onFocus={onFocus}
           pointerEvents={props.editable === false ? "none" : undefined}
@@ -50,7 +55,7 @@ export const InputBase: React.FC<InputBaseProps> = (props) => {
           <InputSuffixIconWrapper
             color={theme.colors.text.muted}
             name={props.suffixIcon}
-            size={18}
+            size={12}
           />
         )}
       </Pressable>

@@ -1,6 +1,9 @@
-import type FontAwesome from "@expo/vector-icons/FontAwesome";
+import type { LucideIcon } from "lucide-react-native";
 import type { TouchableOpacityProps } from "react-native";
-import type { StyledTextVariant } from "../StyledText/StyledText.types";
+import type {
+  StyledTextColor,
+  StyledTextVariant,
+} from "../StyledText/StyledText.types";
 
 export type ButtonVariant =
   | "black"
@@ -13,10 +16,6 @@ export type ButtonVariant =
 
 export type ButtonSize = "sm" | "md" | "lg";
 
-export type StyledTextColor = "default" | "muted" | "black" | "light" | "dark";
-
-export type IconName = keyof typeof FontAwesome.glyphMap;
-
 export interface ButtonProps extends TouchableOpacityProps {
   variant?: ButtonVariant;
   size?: ButtonSize;
@@ -24,7 +23,7 @@ export interface ButtonProps extends TouchableOpacityProps {
   isLoading?: boolean;
   label: string;
   textSize?: StyledTextVariant;
-  icon?: IconName;
+  icon?: LucideIcon;
   textColor?: StyledTextColor;
   onPress?: () => void;
 }
