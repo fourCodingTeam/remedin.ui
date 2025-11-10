@@ -3,6 +3,7 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
 import { useUserStore } from "@/stores";
+import AnimatedSplash from "./AnimatedSplash";
 import "react-native-reanimated";
 
 export { ErrorBoundary } from "expo-router";
@@ -27,7 +28,7 @@ export default function RootLayout() {
     FigtreeSemiBoldItalic: require("@/assets/fonts/Figtree-SemiBoldItalic.ttf"),
   });
 
-  const [_showSplash, _setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
     if (error) {
@@ -45,9 +46,9 @@ export default function RootLayout() {
     return null;
   }
 
-  // if (showSplash) {
-  //   return <AnimatedSplash onFinish={() => setShowSplash(false)} />;
-  // }
+  if (showSplash) {
+    return <AnimatedSplash onFinish={() => setShowSplash(false)} />;
+  }
 
   return <RootLayoutNav />;
 }
