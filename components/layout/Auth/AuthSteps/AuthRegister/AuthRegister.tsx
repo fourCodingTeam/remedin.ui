@@ -45,9 +45,14 @@ export function AuthRegister({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       email: "",
-      username: "",
       password: "",
       confirmPassword: "",
+      name: "",
+      userName: "",
+      phone: "",
+      birthDate: "",
+      weightKg: "",
+      heightCm: "",
     },
     mode: "onChange",
     reValidateMode: "onChange",
@@ -58,7 +63,16 @@ export function AuthRegister({
       setAuthError(null);
       setIsSubmitting(true);
 
-      await signUp(data.email, data.password);
+      await signUp(
+        data.email,
+        data.password,
+        data.name,
+        data.userName,
+        data.phone,
+        data.birthDate,
+        data.weightKg,
+        data.heightCm
+      );
 
       setEmail(data.email);
       setUsername(data.username);
@@ -167,6 +181,118 @@ export function AuthRegister({
                   {errors.confirmPassword && (
                     <StyledText color="error" variant="mediumRegular">
                       {errors.confirmPassword.message}
+                    </StyledText>
+                  )}
+                </>
+              )}
+            />
+
+            <TextWrapper>
+              <StepTitle>Informacoes pessoa</StepTitle>
+              <StepDescription>
+                Preencha seus dados de acesso e personalize seus lembretes.
+              </StepDescription>
+            </TextWrapper>
+
+            <Controller
+              control={control}
+              name="name"
+              render={({ field: { onChange, value } }) => (
+                <>
+                  <InputBase
+                    compact
+                    onChangeText={onChange}
+                    placeholder="Informe seu nome"
+                    prefixIcon="lock"
+                    value={value}
+                  />
+                  {errors.name && (
+                    <StyledText color="error" variant="mediumRegular">
+                      {errors.name.message}
+                    </StyledText>
+                  )}
+                </>
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="phone"
+              render={({ field: { onChange, value } }) => (
+                <>
+                  <InputBase
+                    compact
+                    onChangeText={onChange}
+                    placeholder="Informe seu telefone"
+                    prefixIcon="lock"
+                    value={value}
+                  />
+                  {errors.phone && (
+                    <StyledText color="error" variant="mediumRegular">
+                      {errors.phone.message}
+                    </StyledText>
+                  )}
+                </>
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="birthDate"
+              render={({ field: { onChange, value } }) => (
+                <>
+                  <InputBase
+                    compact
+                    onChangeText={onChange}
+                    placeholder="Informe sua data de nascimento"
+                    prefixIcon="lock"
+                    value={value}
+                  />
+                  {errors.birthDate && (
+                    <StyledText color="error" variant="mediumRegular">
+                      {errors.birthDate.message}
+                    </StyledText>
+                  )}
+                </>
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="weightKg"
+              render={({ field: { onChange, value } }) => (
+                <>
+                  <InputBase
+                    compact
+                    onChangeText={onChange}
+                    placeholder="Informe seu peso (opcional)"
+                    prefixIcon="lock"
+                    value={value ?? ""}
+                  />
+                  {errors.weightKg && (
+                    <StyledText color="error" variant="mediumRegular">
+                      {errors.weightKg.message}
+                    </StyledText>
+                  )}
+                </>
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="heightCm"
+              render={({ field: { onChange, value } }) => (
+                <>
+                  <InputBase
+                    compact
+                    onChangeText={onChange}
+                    placeholder="Informe sua altura (opcional)"
+                    prefixIcon="lock"
+                    value={value ?? ""}
+                  />
+                  {errors.heightCm && (
+                    <StyledText color="error" variant="mediumRegular">
+                      {errors.heightCm.message}
                     </StyledText>
                   )}
                 </>

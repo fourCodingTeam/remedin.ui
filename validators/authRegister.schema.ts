@@ -28,6 +28,12 @@ export const registerSchema = z
         "Senha deve conter pelo menos um caractere especial"
       ),
     confirmPassword: z.string(),
+    name: z.string(),
+    userName: z.string(),
+    phone: z.string(),
+    birthDate: z.string(),
+    weightKg: z.string().nullable(),
+    heightCm: z.string().nullable(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "As senhas não coincidem",

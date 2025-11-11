@@ -1,17 +1,43 @@
+import type { PersonRequest } from "@/services/@types/person";
+import { registerPerson } from "@/services/api/person";
 import { supabase } from "@/services/supabase/supabaseClient";
 
-export async function signUp(email: string, password: string) {
+export async function signUp(
+  email: string,
+  password: string,
+  name: string,
+  userName: string,
+  phone: string,
+  birthDate: string,
+  weightKg?: string | null,
+  heightCm?: string | null
+) {
   try {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
     });
 
-    if (error) {
+    const access_token = data.session?.access_token;
+
+    if (error || !access_token) {
       throw error;
     }
 
-    return data;
+    const person: PersonRequest = {
+      token: access_token,
+      email,
+      name,
+      userName,
+      phone,
+      birthDate,
+      weightKg,
+      heightCm,
+    };
+
+    const personResponse = await registerPerson(person);
+
+    return personResponse;
   } catch (err) {
     // Handle network errors and other exceptions
     if (err instanceof Error) {
