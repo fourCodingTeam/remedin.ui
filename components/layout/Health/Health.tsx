@@ -57,9 +57,11 @@ export function Health({ isMemberApp = false }: HealthProps) {
     setActiveModal(modal);
   };
 
-  const closeModal = (onClose?: () => void) => {
+  const closeModal = (maybeCallback?: unknown) => {
     setActiveModal(null);
-    onClose?.();
+    if (typeof maybeCallback === "function") {
+      maybeCallback();
+    }
   };
 
   const registerCardConfigs: Array<{
@@ -202,7 +204,7 @@ export function Health({ isMemberApp = false }: HealthProps) {
                   onPress: handleLogOut,
                 },
               }}
-              usuario={`Sobre ${member.name ?? "Usuário"}`}
+              usuario={`${member.name ?? "Usuário"}`}
             />
           }
           isScrollable

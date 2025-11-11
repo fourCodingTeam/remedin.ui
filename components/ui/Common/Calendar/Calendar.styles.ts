@@ -21,6 +21,12 @@ export const Header = styled.View`
   justify-content: space-between;
 `;
 
+export const MonthNavigationWrapper = styled.View`
+  flex-direction: row;
+  align-items: center;
+  gap: ${theme.sizes[2]};
+`;
+
 export const MonthTitle = styled.Text`
   font-family: ${theme.fonts.semiBold};
   font-size: ${theme.sizes[5]};

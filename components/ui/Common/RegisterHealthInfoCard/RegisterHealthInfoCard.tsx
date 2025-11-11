@@ -1,6 +1,6 @@
 import { ChevronRight } from "lucide-react-native";
 import { theme } from "@/constants/theme";
-import { StyledText } from "..";
+import { StyledText } from "../StyledText";
 import { CardWrapper, TextsWrapper } from "./RegisterHealthInfoCard.styles";
 import type { RegisterHealthInfoCardProps } from "./RegisterHealthInfoCard.types";
 

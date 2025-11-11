@@ -1,7 +1,9 @@
 import { BellIcon, Menu } from "lucide-react-native";
 import { useState } from "react";
 import { theme } from "@/constants/theme";
-import { Avatar, SideMenuModal, StyledText } from "..";
+import { Avatar } from "../Avatar";
+import { SideMenuModal } from "../SideMenuModal";
+import { StyledText } from "../StyledText";
 import {
   HeaderWrapper,
   IconsWrapper,

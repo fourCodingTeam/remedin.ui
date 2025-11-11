@@ -16,7 +16,7 @@ import { memberMock } from "@/services/mock/memberMock";
 import { useMemberStore } from "@/stores/MemberStore";
 import type { MemberState } from "@/stores/MemberStore/@types";
 import { useUserStore } from "@/stores/UserStore";
-import { PageWrapper } from "..";
+import { PageWrapper } from "../Common/PageWrapper";
 import { NewMemberFormModal } from "../NewMemberFormModal";
 import { ContentWrapper } from "../styles";
 import type { MembersProps } from "./Members.types";
@@ -100,7 +100,7 @@ export function Members({ isMemberApp = false }: MembersProps) {
                 onPress: handleLogOut,
               },
             }}
-            usuario={`No perfil de ${member.name ?? "Usuário"}`}
+            usuario={`${member.name ?? "Usuário"}`}
           />
         }
         isScrollable
@@ -119,7 +119,7 @@ export function Members({ isMemberApp = false }: MembersProps) {
             id={1}
             isUser
             name="Você"
-            onPress={() => router.replace("/(tabs)")}
+            onPress={() => router.dismissTo("/(tabs)")}
             phoneNumber="34996621768"
           />
         </ContentWrapper>

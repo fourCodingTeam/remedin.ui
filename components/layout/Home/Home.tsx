@@ -16,8 +16,8 @@ import { theme } from "@/constants/theme";
 import { medicinesMock } from "@/services/mock/medicines";
 import { useMemberStore } from "@/stores/MemberStore";
 import { useUserStore } from "@/stores/UserStore";
-import { PageWrapper } from "..";
 import { CalendarModal } from "../CalendarModal/CalendarModal";
+import { PageWrapper } from "../Common/PageWrapper";
 import { MedicineFormModal } from "../MedicineFormModal";
 import { ButtonsWrapper, ScrollableContentWrapper } from "../styles";
 import type { HomeProps } from "./Home.types";
@@ -96,7 +96,7 @@ export default function Home({ isMemberApp = false }: HomeProps) {
                 onPress: handleLogOut,
               },
             }}
-            usuario={`No perfil de ${member.name}`}
+            usuario={`${member.name}`}
           >
             <TDCalendar date={selectedDate} onDateChange={setSelectedDate} />
             <ButtonsWrapper>
@@ -194,7 +194,7 @@ export default function Home({ isMemberApp = false }: HomeProps) {
               onPress: handleLogOut,
             },
           }}
-          usuario={`Olá, ${username ?? "Usuário"}!`}
+          usuario={`${username ?? "Usuário"}`}
         >
           <TDCalendar date={selectedDate} onDateChange={setSelectedDate} />
           <ButtonsWrapper>
