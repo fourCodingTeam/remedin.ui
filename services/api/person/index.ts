@@ -6,21 +6,21 @@ export async function registerPerson(
   request: PersonRequest
 ): Promise<BaseResponse> {
   try {
-    const response = await fetch(`${API_BASE_URL}/Residents`, {
+    const response = await fetch(`${API_BASE_URL}/Person`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${request.token}`,
-        body: JSON.stringify({
-          email: request.email,
-          name: request.name,
-          userName: request.userName,
-          phone: request.phone,
-          birthDate: request.birthDate,
-          weightKg: request.weightKg,
-          heightCm: request.heightCm,
-        }),
       },
+      body: JSON.stringify({
+        email: request.email,
+        name: request.name,
+        userName: request.userName,
+        phone: request.phone,
+        birthDate: request.birthDate,
+        weightKg: request.weightKg,
+        heightCm: request.heightCm,
+      }),
     });
 
     if (!response.ok) {

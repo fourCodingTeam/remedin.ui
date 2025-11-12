@@ -30,7 +30,7 @@ export async function signUp(
       name,
       userName,
       phone,
-      birthDate,
+      birthDate: new Date(birthDate),
       weightKg,
       heightCm,
     };
