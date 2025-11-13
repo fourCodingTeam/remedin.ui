@@ -1,30 +1,32 @@
 import { router } from "expo-router";
-import {
-  Archive,
-  Calendar,
-  CalendarDays,
-  LogOutIcon,
-  Plus,
-  Settings,
-  User,
-} from "lucide-react-native";
+import { CalendarDays, Plus } from "lucide-react-native";
 import { useMemo, useState } from "react";
 import { Button, Header, InputSelect, StyledText } from "@/components/ui";
 import { TDCalendar } from "@/components/ui/ClickableThreeDayCalendar";
 import { MedicineCheckboxCard } from "@/components/ui/Common/CheckboxCard";
-import { theme } from "@/constants/theme";
+import { useToast } from "@/components/ui/Toast";
+import {
+  memberSideMenuConfig,
+  sideMenuConfig,
+} from "@/constants/sideMenu.config";
 import { medicinesMock } from "@/services/mock/medicines";
 import { useMemberStore } from "@/stores/MemberStore";
 import { useUserStore } from "@/stores/UserStore";
-import { CalendarModal } from "../CalendarModal/CalendarModal";
 import { PageWrapper } from "../Common/PageWrapper";
-import { MedicineFormModal } from "../MedicineFormModal";
+import { CalendarModal } from "../Modals/CalendarModal/CalendarModal";
+import { ConfigurationsModal } from "../Modals/ConfigurationsModal";
+import { MedicineFormModal } from "../Modals/MedicineFormModal";
+import { MedicinesModal } from "../Modals/MedicinesModal";
+import { NotificationsModal } from "../Modals/NotificationsModal";
+import { ProfileModal } from "../Modals/ProfileModal";
+import { ReportsModal } from "../Modals/ReportsModal";
 import { ButtonsWrapper, ScrollableContentWrapper } from "../styles";
 import type { HomeProps } from "./Home.types";
 
 export default function Home({ isMemberApp = false }: HomeProps) {
   const { username, signOut } = useUserStore();
   const { member } = useMemberStore();
+  const { showToast } = useToast();
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [selectedFilter, setSelectedFilter] = useState<
     string | number | undefined
@@ -32,6 +34,13 @@ export default function Home({ isMemberApp = false }: HomeProps) {
   const [isMedicineFormModalVisible, setIsMedicineFormModalVisible] =
     useState(false);
   const [isCalendarModalVisible, setIsCalendarModalVisible] = useState(false);
+  const [isProfileModalVisible, setIsProfileModalVisible] = useState(false);
+  const [isMedicinesModalVisible, setIsMedicinesModalVisible] = useState(false);
+  const [isReportsModalVisible, setIsReportsModalVisible] = useState(false);
+  const [isConfigurationsModalVisible, setIsConfigurationsModalVisible] =
+    useState(false);
+  const [isNotificationsModalVisible, setIsNotificationsModalVisible] =
+    useState(false);
   const filterOptions = [
     { label: "Todas as medicações", value: "all" },
     { label: "Medicações agendadas", value: "scheduled" },
@@ -54,6 +63,7 @@ export default function Home({ isMemberApp = false }: HomeProps) {
 
   const handleLogOut = async () => {
     await signOut();
+    showToast("Logout realizado com sucesso!", "success");
     router.replace("/auth");
   };
 
@@ -63,40 +73,15 @@ export default function Home({ isMemberApp = false }: HomeProps) {
         header={
           <Header
             description="Como está se sentindo hoje?"
-            sideMenu={{
-              userPhone: member.phoneNumber ?? undefined,
-              userName: member.name ?? undefined,
-              menuItems: [
-                {
-                  id: "1",
-                  label: "Perfil",
-                  icon: () => <User size={18} />,
-                },
-                {
-                  id: "2",
-                  label: "Calendário",
-                  icon: () => <Calendar size={18} />,
-                },
-                {
-                  id: "3",
-                  label: "Medicações",
-                  icon: () => <Archive size={18} />,
-                },
-                {
-                  id: "4",
-                  label: "Configurações",
-                  icon: () => <Settings size={18} />,
-                },
-              ],
-              footerAction: {
-                label: "Sair",
-                icon: () => (
-                  <LogOutIcon color={theme.colors.warnings.danger} size={18} />
-                ),
-                onPress: handleLogOut,
-              },
-            }}
-            usuario={`${member.name}`}
+            onBellPress={() => setIsNotificationsModalVisible(true)}
+            sideMenu={memberSideMenuConfig(member, handleLogOut, {
+              setIsCalendarModalVisible,
+              setIsProfileModalVisible,
+              setIsMedicinesModalVisible,
+              setIsReportsModalVisible,
+              setIsConfigurationsModalVisible,
+            })}
+            usuario={member.name ?? "Membro"}
           >
             <TDCalendar date={selectedDate} onDateChange={setSelectedDate} />
             <ButtonsWrapper>
@@ -153,6 +138,26 @@ export default function Home({ isMemberApp = false }: HomeProps) {
           isVisible={isCalendarModalVisible}
           onClose={() => setIsCalendarModalVisible(false)}
         />
+        <ProfileModal
+          isVisible={isProfileModalVisible}
+          onClose={() => setIsProfileModalVisible(false)}
+        />
+        <MedicinesModal
+          isVisible={isMedicinesModalVisible}
+          onClose={() => setIsMedicinesModalVisible(false)}
+        />
+        <ReportsModal
+          isVisible={isReportsModalVisible}
+          onClose={() => setIsReportsModalVisible(false)}
+        />
+        <ConfigurationsModal
+          isVisible={isConfigurationsModalVisible}
+          onClose={() => setIsConfigurationsModalVisible(false)}
+        />
+        <NotificationsModal
+          isVisible={isNotificationsModalVisible}
+          onClose={() => setIsNotificationsModalVisible(false)}
+        />
       </PageWrapper>
     );
   }
@@ -162,39 +167,15 @@ export default function Home({ isMemberApp = false }: HomeProps) {
       header={
         <Header
           description="Como está se sentindo hoje?"
-          sideMenu={{
-            userName: username ?? undefined,
-            menuItems: [
-              {
-                id: "1",
-                label: "Perfil",
-                icon: () => <User size={18} />,
-              },
-              {
-                id: "2",
-                label: "Calendário",
-                icon: () => <Calendar size={18} />,
-              },
-              {
-                id: "3",
-                label: "Medicações",
-                icon: () => <Archive size={18} />,
-              },
-              {
-                id: "4",
-                label: "Configurações",
-                icon: () => <Settings size={18} />,
-              },
-            ],
-            footerAction: {
-              label: "Sair",
-              icon: () => (
-                <LogOutIcon color={theme.colors.warnings.danger} size={18} />
-              ),
-              onPress: handleLogOut,
-            },
-          }}
-          usuario={`${username ?? "Usuário"}`}
+          onBellPress={() => setIsNotificationsModalVisible(true)}
+          sideMenu={sideMenuConfig(username ?? "Usuário", handleLogOut, {
+            setIsCalendarModalVisible,
+            setIsProfileModalVisible,
+            setIsMedicinesModalVisible,
+            setIsReportsModalVisible,
+            setIsConfigurationsModalVisible,
+          })}
+          usuario={username ?? "Usuário"}
         >
           <TDCalendar date={selectedDate} onDateChange={setSelectedDate} />
           <ButtonsWrapper>
@@ -250,6 +231,26 @@ export default function Home({ isMemberApp = false }: HomeProps) {
       <CalendarModal
         isVisible={isCalendarModalVisible}
         onClose={() => setIsCalendarModalVisible(false)}
+      />
+      <ProfileModal
+        isVisible={isProfileModalVisible}
+        onClose={() => setIsProfileModalVisible(false)}
+      />
+      <MedicinesModal
+        isVisible={isMedicinesModalVisible}
+        onClose={() => setIsMedicinesModalVisible(false)}
+      />
+      <ReportsModal
+        isVisible={isReportsModalVisible}
+        onClose={() => setIsReportsModalVisible(false)}
+      />
+      <ConfigurationsModal
+        isVisible={isConfigurationsModalVisible}
+        onClose={() => setIsConfigurationsModalVisible(false)}
+      />
+      <NotificationsModal
+        isVisible={isNotificationsModalVisible}
+        onClose={() => setIsNotificationsModalVisible(false)}
       />
     </PageWrapper>
   );

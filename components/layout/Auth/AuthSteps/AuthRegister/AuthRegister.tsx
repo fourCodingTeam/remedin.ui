@@ -5,6 +5,7 @@ import { signUp } from "@/auth/signUp";
 import { InputBase } from "@/components/ui";
 import { Button } from "@/components/ui/Common/Button";
 import { StyledText } from "@/components/ui/Common/StyledText";
+import { useToast } from "@/components/ui/Toast";
 import { theme } from "@/constants/theme";
 import { useUserStore } from "@/stores";
 import { type RegisterFormData, registerSchema } from "@/validators";
@@ -34,6 +35,7 @@ export function AuthRegister({
   onNavigateToLogin,
 }: AuthRegisterProps) {
   const { setIsLoggedIn, setEmail, setUsername } = useUserStore();
+  const { showToast } = useToast();
   const [authError, setAuthError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -63,10 +65,12 @@ export function AuthRegister({
       setEmail(data.email);
       setUsername(data.username);
       setIsLoggedIn(true);
+      showToast("Conta criada com sucesso!", "success");
       onClose();
     } catch (err) {
       const errorMessage = getErrorMessage(err);
       setAuthError(errorMessage);
+      showToast(errorMessage, "error");
     } finally {
       setIsSubmitting(false);
     }

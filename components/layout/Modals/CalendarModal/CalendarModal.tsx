@@ -7,8 +7,8 @@ import {
 } from "@/components/ui/Common";
 import { Calendar } from "@/components/ui/Common/Calendar";
 import { medicinesPerHourMock } from "@/services/mock/medicinesPerHour";
-import { ModalPageWrapper } from "../Common/ModalPageWrapper";
-import { ButtonsWrapper } from "../styles";
+import { ModalPageWrapper } from "../../Common/ModalPageWrapper";
+import { ButtonsWrapper } from "../../styles";
 import {
   MedicationTimeLineItem,
   MedicinesStack,

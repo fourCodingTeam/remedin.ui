@@ -17,6 +17,8 @@ export type ButtonVariant =
 export type ButtonSize = "sm" | "md" | "lg";
 
 export interface ButtonProps extends TouchableOpacityProps {
+  spacedBetween?: boolean;
+  alignItems?: "center" | "flex-start" | "flex-end";
   variant?: ButtonVariant;
   size?: ButtonSize;
   fullWidth?: boolean;

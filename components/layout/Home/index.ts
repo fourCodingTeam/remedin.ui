@@ -1,2 +1,2 @@
-export * from "../MedicineFormModal";
+export * from "../Modals/MedicineFormModal";
 export * from "./Home";

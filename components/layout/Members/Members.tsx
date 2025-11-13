@@ -1,23 +1,25 @@
 import { router } from "expo-router";
-import {
-  Archive,
-  Calendar,
-  LogOutIcon,
-  Settings,
-  User,
-  UserPlus,
-} from "lucide-react-native";
+import { UserPlus } from "lucide-react-native";
 import { useState } from "react";
 import { signOut } from "@/auth/signOut";
 import { Button, Header, InputSelect, StyledText } from "@/components/ui";
 import { MemberCard } from "@/components/ui/MemberCard/MemberCard";
-import { theme } from "@/constants/theme";
+import {
+  memberSideMenuConfig,
+  sideMenuConfig,
+} from "@/constants/sideMenu.config";
 import { memberMock } from "@/services/mock/memberMock";
 import { useMemberStore } from "@/stores/MemberStore";
 import type { MemberState } from "@/stores/MemberStore/@types";
 import { useUserStore } from "@/stores/UserStore";
 import { PageWrapper } from "../Common/PageWrapper";
-import { NewMemberFormModal } from "../NewMemberFormModal";
+import { CalendarModal } from "../Modals/CalendarModal";
+import { ConfigurationsModal } from "../Modals/ConfigurationsModal";
+import { MedicinesModal } from "../Modals/MedicinesModal";
+import { NewMemberFormModal } from "../Modals/NewMemberFormModal";
+import { NotificationsModal } from "../Modals/NotificationsModal";
+import { ProfileModal } from "../Modals/ProfileModal";
+import { ReportsModal } from "../Modals/ReportsModal";
 import { ContentWrapper } from "../styles";
 import type { MembersProps } from "./Members.types";
 
@@ -33,6 +35,14 @@ export function Members({ isMemberApp = false }: MembersProps) {
     setBloodSugar,
     setAmountOfMedicine,
   } = useMemberStore();
+  const [isCalendarModalVisible, setIsCalendarModalVisible] = useState(false);
+  const [isProfileModalVisible, setIsProfileModalVisible] = useState(false);
+  const [isMedicinesModalVisible, setIsMedicinesModalVisible] = useState(false);
+  const [isReportsModalVisible, setIsReportsModalVisible] = useState(false);
+  const [isConfigurationsModalVisible, setIsConfigurationsModalVisible] =
+    useState(false);
+  const [isNotificationsModalVisible, setIsNotificationsModalVisible] =
+    useState(false);
   const [selectedFilter, setSelectedFilter] = useState<
     string | number | undefined
   >();
@@ -67,40 +77,15 @@ export function Members({ isMemberApp = false }: MembersProps) {
         header={
           <Header
             description="Quem gostaria de ver?"
-            sideMenu={{
-              userPhone: member.phoneNumber ?? undefined,
-              userName: member.name ?? undefined,
-              menuItems: [
-                {
-                  id: "1",
-                  label: "Perfil",
-                  icon: () => <User size={18} />,
-                },
-                {
-                  id: "2",
-                  label: "Calendário",
-                  icon: () => <Calendar size={18} />,
-                },
-                {
-                  id: "3",
-                  label: "Medicações",
-                  icon: () => <Archive size={18} />,
-                },
-                {
-                  id: "4",
-                  label: "Configurações",
-                  icon: () => <Settings size={18} />,
-                },
-              ],
-              footerAction: {
-                label: "Sair",
-                icon: () => (
-                  <LogOutIcon color={theme.colors.warnings.danger} size={18} />
-                ),
-                onPress: handleLogOut,
-              },
-            }}
-            usuario={`${member.name ?? "Usuário"}`}
+            onBellPress={() => setIsNotificationsModalVisible(true)}
+            sideMenu={memberSideMenuConfig(member, handleLogOut, {
+              setIsCalendarModalVisible,
+              setIsProfileModalVisible,
+              setIsMedicinesModalVisible,
+              setIsReportsModalVisible,
+              setIsConfigurationsModalVisible,
+            })}
+            usuario={member.name ?? "Membro"}
           />
         }
         isScrollable
@@ -123,6 +108,26 @@ export function Members({ isMemberApp = false }: MembersProps) {
             phoneNumber="34996621768"
           />
         </ContentWrapper>
+        <ProfileModal
+          isVisible={isProfileModalVisible}
+          onClose={() => setIsProfileModalVisible(false)}
+        />
+        <MedicinesModal
+          isVisible={isMedicinesModalVisible}
+          onClose={() => setIsMedicinesModalVisible(false)}
+        />
+        <ReportsModal
+          isVisible={isReportsModalVisible}
+          onClose={() => setIsReportsModalVisible(false)}
+        />
+        <ConfigurationsModal
+          isVisible={isConfigurationsModalVisible}
+          onClose={() => setIsConfigurationsModalVisible(false)}
+        />
+        <NotificationsModal
+          isVisible={isNotificationsModalVisible}
+          onClose={() => setIsNotificationsModalVisible(false)}
+        />
       </PageWrapper>
     );
   }
@@ -133,40 +138,15 @@ export function Members({ isMemberApp = false }: MembersProps) {
         header={
           <Header
             description="Como está se sentindo hoje?"
-            sideMenu={{
-              userName: username ?? undefined,
-              userPhone: "99999999999",
-              menuItems: [
-                {
-                  id: "1",
-                  label: "Perfil",
-                  icon: () => <User size={18} />,
-                },
-                {
-                  id: "2",
-                  label: "Calendário",
-                  icon: () => <Calendar size={18} />,
-                },
-                {
-                  id: "3",
-                  label: "Medicações",
-                  icon: () => <Archive size={18} />,
-                },
-                {
-                  id: "4",
-                  label: "Configurações",
-                  icon: () => <Settings size={18} />,
-                },
-              ],
-              footerAction: {
-                label: "Sair",
-                icon: () => (
-                  <LogOutIcon color={theme.colors.warnings.danger} size={18} />
-                ),
-                onPress: handleLogOut,
-              },
-            }}
-            usuario={username ?? undefined}
+            onBellPress={() => setIsNotificationsModalVisible(true)}
+            sideMenu={sideMenuConfig(username ?? "Usuário", handleLogOut, {
+              setIsCalendarModalVisible,
+              setIsProfileModalVisible,
+              setIsMedicinesModalVisible,
+              setIsReportsModalVisible,
+              setIsConfigurationsModalVisible,
+            })}
+            usuario={username ?? "Usuário"}
           >
             <Button
               icon={UserPlus}
@@ -207,6 +187,30 @@ export function Members({ isMemberApp = false }: MembersProps) {
       <NewMemberFormModal
         isVisible={isNewMemberModalVisible}
         onClose={() => setIsNewMemberModalVisible(false)}
+      />
+      <CalendarModal
+        isVisible={isCalendarModalVisible}
+        onClose={() => setIsCalendarModalVisible(false)}
+      />
+      <ProfileModal
+        isVisible={isProfileModalVisible}
+        onClose={() => setIsProfileModalVisible(false)}
+      />
+      <MedicinesModal
+        isVisible={isMedicinesModalVisible}
+        onClose={() => setIsMedicinesModalVisible(false)}
+      />
+      <ReportsModal
+        isVisible={isReportsModalVisible}
+        onClose={() => setIsReportsModalVisible(false)}
+      />
+      <ConfigurationsModal
+        isVisible={isConfigurationsModalVisible}
+        onClose={() => setIsConfigurationsModalVisible(false)}
+      />
+      <NotificationsModal
+        isVisible={isNotificationsModalVisible}
+        onClose={() => setIsNotificationsModalVisible(false)}
       />
     </>
   );
