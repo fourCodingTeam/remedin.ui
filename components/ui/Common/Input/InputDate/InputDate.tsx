@@ -1,14 +1,10 @@
 import { useState } from "react";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
+import { formatDateToDDMMYYYY } from "@/utils/DateFormatters";
 import { InputBase } from "../InputBase";
 import type { InputDateProps } from "./InputData.types";
 
-function formatDateToDDMMYYYY(d: Date) {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${day}-${m}-${y}`;
-}
+type ValueType = Date | null | undefined;
 
 export function InputDate({
   value,
@@ -16,21 +12,17 @@ export function InputDate({
   placeholder = "DD-MM-YYYY",
   mode = "date",
   ...rest
-}: InputDateProps) {
+}: Omit<InputDateProps, "value" | "onChange"> & {
+  value?: ValueType;
+  onChange?: (date: Date | null) => void;
+}) {
   const [visible, setVisible] = useState(false);
 
-  const parseDateOrNow = (val?: string) => {
-    if (!val) {
-      return new Date();
-    }
-    const parsed = new Date(val);
-    return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
-  };
+  const currentDate = value ?? new Date();
 
   const handleConfirm = (date: Date) => {
-    const formatted = formatDateToDDMMYYYY(date);
     setVisible(false);
-    onChange?.(formatted);
+    onChange?.(date);
   };
 
   return (
@@ -41,15 +33,13 @@ export function InputDate({
         editable={false}
         onPressIn={() => setVisible(true)}
         placeholder={placeholder}
-        value={value}
+        value={value ? formatDateToDDMMYYYY(value) : ""}
       />
 
       <DateTimePickerModal
-        date={parseDateOrNow(value)}
+        date={currentDate}
         isVisible={visible}
-        mode={
-          mode === "datetime" ? "date" : (mode as "date" | "time" | "datetime")
-        }
+        mode={mode}
         onCancel={() => setVisible(false)}
         onConfirm={handleConfirm}
       />

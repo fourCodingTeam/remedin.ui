@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { signUp } from "@/auth/signUp";
-import { InputBase } from "@/components/ui";
+import { InputBase, InputDate } from "@/components/ui";
 import { Button } from "@/components/ui/Common/Button";
 import { StyledText } from "@/components/ui/Common/StyledText";
 import { useToast } from "@/components/ui/Toast";
@@ -52,9 +52,9 @@ export function AuthRegister({
       name: "",
       userName: "",
       phone: "",
-      birthDate: "",
-      weightKg: "",
-      heightCm: "",
+      birthDate: new Date(),
+      weightKg: 0,
+      heightCm: 0,
     },
     mode: "onChange",
     reValidateMode: "onChange",
@@ -70,14 +70,14 @@ export function AuthRegister({
         data.password,
         data.name,
         data.userName,
-        data.phone,
         data.birthDate,
+        data.phone,
         data.weightKg,
         data.heightCm
       );
 
       setEmail(data.email);
-      setUsername(data.username);
+      setUsername(data.userName);
       setIsLoggedIn(true);
       showToast("Conta criada com sucesso!", "success");
       onClose();
@@ -127,20 +127,20 @@ export function AuthRegister({
 
             <Controller
               control={control}
-              name="username"
+              name="userName"
               render={({ field: { onChange, value } }) => (
                 <>
                   <InputBase
                     autoCapitalize="none"
                     compact
                     onChangeText={onChange}
-                    placeholder="Usuário"
+                    placeholder="Apelido"
                     prefixIcon="user"
                     value={value}
                   />
-                  {errors.username && (
+                  {errors.userName && (
                     <StyledText color="error" variant="mediumRegular">
-                      {errors.username.message}
+                      {errors.userName.message}
                     </StyledText>
                   )}
                 </>
@@ -192,7 +192,7 @@ export function AuthRegister({
             />
 
             <TextWrapper>
-              <StepTitle>Informacoes pessoa</StepTitle>
+              <StepTitle>Informacoes pessoais</StepTitle>
               <StepDescription>
                 Preencha seus dados de acesso e personalize seus lembretes.
               </StepDescription>
@@ -245,11 +245,9 @@ export function AuthRegister({
               name="birthDate"
               render={({ field: { onChange, value } }) => (
                 <>
-                  <InputBase
-                    compact
-                    onChangeText={onChange}
-                    placeholder="Informe sua data de nascimento"
-                    prefixIcon="lock"
+                  <InputDate
+                    onChange={onChange}
+                    placeholder="Data de Nascimento"
                     value={value}
                   />
                   {errors.birthDate && (
@@ -271,7 +269,7 @@ export function AuthRegister({
                     onChangeText={onChange}
                     placeholder="Informe seu peso (opcional)"
                     prefixIcon="lock"
-                    value={value ?? ""}
+                    value={value ? String(value) : ""}
                   />
                   {errors.weightKg && (
                     <StyledText color="error" variant="mediumRegular">
@@ -292,7 +290,7 @@ export function AuthRegister({
                     onChangeText={onChange}
                     placeholder="Informe sua altura (opcional)"
                     prefixIcon="lock"
-                    value={value ?? ""}
+                    value={value ? String(value) : ""}
                   />
                   {errors.heightCm && (
                     <StyledText color="error" variant="mediumRegular">

@@ -4,20 +4,29 @@ const specialCharacterRegex = /[^A-Za-z0-9]/;
 const uppercaseRegex = /[A-Z]/;
 const lowercaseRegex = /[a-z]/;
 const numberRegex = /\d/;
+const phoneRegex = /^[0-9]{10,11}$/;
+
+const today = new Date();
 
 export const registerSchema = z
   .object({
-    email: z.string().email("Email inválido").min(1, "Email é obrigatório"),
-    username: z
+    email: z
       .string()
-      .min(3, "Usuário deve ter pelo menos 3 caracteres")
-      .max(20, "Usuário deve ter no máximo 20 caracteres")
+      .trim()
+      .min(1, "Email é obrigatório")
+      .email("Email inválido"),
+    userName: z
+      .string()
+      .trim()
+      .min(3, "Seu apelido deve ter pelo menos 3 caracteres")
+      .max(20, "Seu apelido deve ter no máximo 20 caracteres")
       .regex(
         /^[a-zA-Z0-9_]+$/,
-        "Usuário pode conter apenas letras, números e underline"
+        "Seu apelido pode conter apenas letras, números e underline"
       ),
     password: z
       .string()
+      .trim()
       .min(8, "Senha deve ter pelo menos 8 caracteres")
       .max(50, "Senha deve ter no máximo 50 caracteres")
       .regex(uppercaseRegex, "Senha deve conter pelo menos uma letra maiúscula")
@@ -27,13 +36,38 @@ export const registerSchema = z
         specialCharacterRegex,
         "Senha deve conter pelo menos um caractere especial"
       ),
-    confirmPassword: z.string(),
-    name: z.string(),
-    userName: z.string(),
-    phone: z.string(),
-    birthDate: z.string(),
-    weightKg: z.string().nullable(),
-    heightCm: z.string().nullable(),
+    confirmPassword: z.string().trim(),
+    name: z
+      .string()
+      .trim()
+      .min(2, "Nome deve ter pelo menos 2 caracteres")
+      .max(80, "Nome deve ter no máximo 80 caracteres"),
+    phone: z
+      .string()
+      .trim()
+      .refine(
+        (val) => !val || phoneRegex.test(val),
+        "Telefone deve conter apenas números (10 ou 11 dígitos)"
+      ),
+    birthDate: z
+      .date({
+        required_error: "Data de nascimento é obrigatória",
+        invalid_type_error: "Data de nascimento inválida",
+      })
+      .refine((date) => date === null || date <= today, {
+        message: "Data de nascimento não pode estar no futuro",
+        path: ["birthDate"],
+      }),
+    weightKg: z.coerce
+      .number({
+        invalid_type_error: "Peso deve ser um número",
+      })
+      .optional(),
+    heightCm: z.coerce
+      .number({
+        invalid_type_error: "Altura deve ser um número",
+      })
+      .optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "As senhas não coincidem",

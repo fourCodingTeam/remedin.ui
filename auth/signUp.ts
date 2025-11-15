@@ -7,10 +7,10 @@ export async function signUp(
   password: string,
   name: string,
   userName: string,
+  birthDate: Date,
   phone: string,
-  birthDate: string,
-  weightKg?: string | null,
-  heightCm?: string | null
+  weightKg?: number | null,
+  heightCm?: number | null
 ) {
   try {
     const { data, error } = await supabase.auth.signUp({
@@ -30,7 +30,7 @@ export async function signUp(
       name,
       userName,
       phone,
-      birthDate: new Date(birthDate),
+      birthDate,
       weightKg,
       heightCm,
     };
@@ -39,9 +39,7 @@ export async function signUp(
 
     return personResponse;
   } catch (err) {
-    // Handle network errors and other exceptions
     if (err instanceof Error) {
-      // Check if it's a network error
       if (
         err.message.includes("Network request failed") ||
         err.message.includes("Failed to fetch") ||
@@ -51,10 +49,8 @@ export async function signUp(
           "Erro de conexão. Verifique sua internet e tente novamente."
         );
       }
-      // Re-throw Supabase errors with their message
       throw err;
     }
-    // Handle unknown errors
     throw new Error("Erro desconhecido ao criar conta. Tente novamente.");
   }
 }

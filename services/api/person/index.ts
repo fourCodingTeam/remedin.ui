@@ -1,6 +1,6 @@
 import { API_BASE_URL } from "@/constants/apiConfig";
 import type { BaseResponse } from "@/services/@types/baseResponse";
-import type { PersonRequest } from "@/services/@types/person";
+import type { PersonRequest, PersonResponse } from "@/services/@types/person";
 
 export async function registerPerson(
   request: PersonRequest
@@ -31,5 +31,25 @@ export async function registerPerson(
     return data as BaseResponse;
   } catch (error) {
     throw new Error(`Failed to create resident ${error}`);
+  }
+}
+
+export async function GetCurrentPerson(token: string): Promise<BaseResponse> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/Person`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to get resident: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data as BaseResponse<PersonResponse>;
+  } catch (error) {
+    throw new Error(`Failed to get resident ${error}`);
   }
 }
