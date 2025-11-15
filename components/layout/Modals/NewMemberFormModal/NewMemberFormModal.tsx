@@ -1,11 +1,11 @@
 import { UserPlus } from "lucide-react-native";
 import { Button, InputBase } from "@/components/ui";
-import { ModalPageWrapper } from "../Common/ModalPageWrapper";
+import { ModalPageWrapper } from "../../Common/ModalPageWrapper";
 import {
   ButtonsWrapper,
   FormContentWrapper,
   InputsWrapper,
-} from "../styles";
+} from "../../styles";
 
 type NewMemberFormModalProps = {
   isVisible: boolean;
@@ -52,4 +52,3 @@ export function NewMemberFormModal({
     </ModalPageWrapper>
   );
 }
-

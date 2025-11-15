@@ -1,7 +1,12 @@
 import { Plus } from "lucide-react-native";
+import { medicineMeasurementsEnum } from "@/@types";
 import { Button, InputBase, InputDate, InputSelect } from "@/components/ui";
-import { ModalPageWrapper } from "../Common/ModalPageWrapper";
-import { ButtonsWrapper, FormContentWrapper, InputsWrapper } from "../styles";
+import { ModalPageWrapper } from "../../Common/ModalPageWrapper";
+import {
+  ButtonsWrapper,
+  FormContentWrapper,
+  InputsWrapper,
+} from "../../styles";
 import { SideBySideInputsWrapper } from "./MedicineFormModal.styles";
 import type { MedicineFormModalProps } from "./MedicineFormMotal.types";
 
@@ -43,12 +48,7 @@ export function MedicineFormModal({
             <InputSelect
               compact
               enableFlexOne
-              options={[
-                { label: "Miligramas", value: "mg" },
-                { label: "Gramas", value: "g" },
-                { label: "Mililitros", value: "ml" },
-                { label: "Litros", value: "l" },
-              ]}
+              options={medicineMeasurementsEnum}
               placeholder="Medida"
             />
           </SideBySideInputsWrapper>

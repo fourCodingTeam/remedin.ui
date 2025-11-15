@@ -5,6 +5,7 @@ import { signInWithEmail } from "@/auth/signIn";
 import { InputBase } from "@/components/ui";
 import { Button } from "@/components/ui/Common/Button"; //
 import { StyledText } from "@/components/ui/Common/StyledText";
+import { useToast } from "@/components/ui/Toast";
 import { useUserStore } from "@/stores";
 import { type LoginFormData, loginSchema } from "@/validators";
 import {
@@ -20,6 +21,7 @@ import type { AuthLoginProps } from "../AuthModal.types";
 
 export function AuthLogin({ onClose, onNavigateToRegister }: AuthLoginProps) {
   const { setIsLoggedIn, setUsername, setEmail, setToken } = useUserStore();
+  const { showToast } = useToast();
 
   const [authError, setAuthError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -48,9 +50,11 @@ export function AuthLogin({ onClose, onNavigateToRegister }: AuthLoginProps) {
       setToken(response.session.access_token);
 
       setIsLoggedIn(true);
+      showToast("Login realizado com sucesso!", "success");
       onClose();
     } catch {
       setAuthError("Não foi possível fazer login. Tente novamente.");
+      showToast("Não foi possível fazer login. Tente novamente.", "error");
     } finally {
       setIsSubmitting(false);
     }

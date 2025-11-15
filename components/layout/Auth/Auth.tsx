@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import { LogIn } from "lucide-react-native";
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import { Alert } from "react-native";
 import { signInWithGoogle } from "@/auth/signIn";
 import { Button } from "@/components/ui";
 import { useUserStore } from "@/stores/UserStore";
@@ -8,7 +9,8 @@ import { ButtonsWrapper, StyledImage, StyledView } from "./Auth.styles";
 import { AuthModal } from "./AuthSteps";
 
 export function Auth() {
-  const { token, signOut } = useUserStore();
+  const { token, setToken, setEmail, setUsername, setIsLoggedIn } =
+    useUserStore();
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   const handlePressLogIn = () => {
@@ -24,10 +26,32 @@ export function Auth() {
     setIsModalVisible(false);
   };
 
-  const handlePressGoogleLogin = async () => {
-    signOut();
-    await signInWithGoogle();
-  };
+  const handlePressGoogleLogin = useCallback(async () => {
+    try {
+      const session = await signInWithGoogle();
+
+      if (!session?.access_token) {
+        return;
+      }
+
+      setToken(session.access_token);
+      setIsLoggedIn(true);
+      setEmail(session.user.email ?? null);
+
+      const displayName =
+        (session.user.user_metadata?.full_name as string | undefined) ??
+        session.user.email ??
+        null;
+
+      setUsername(displayName);
+      router.push("/(tabs)");
+    } catch {
+      Alert.alert(
+        "Erro ao entrar",
+        "Não foi possível completar o login com o Google. Tente novamente."
+      );
+    }
+  }, [setEmail, setIsLoggedIn, setToken, setUsername]);
 
   return (
     <StyledView>

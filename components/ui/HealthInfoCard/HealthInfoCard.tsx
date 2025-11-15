@@ -1,5 +1,5 @@
 import { theme } from "@/constants/theme";
-import { StyledText } from "..";
+import { StyledText } from "../Common/StyledText";
 import type { StyledTextColor } from "../Common/StyledText/StyledText.types";
 import {
   CardHeader,

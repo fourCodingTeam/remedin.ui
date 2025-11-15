@@ -1,3 +1,4 @@
+import type { StyleProp, ViewStyle } from "react-native";
 import { StyledText } from "../StyledText";
 import { CheckboxCard } from "./CheckboxCard";
 import {
@@ -21,6 +22,7 @@ export type ReportCheckboxCardProps = {
   disabled?: boolean;
   onChange?: (value: string, checked: boolean) => void;
   onPress?: (value: string, checked: boolean) => void;
+  style?: StyleProp<ViewStyle>;
 };
 
 const defaultTone: CheckboxCardTone = "neutral";
@@ -37,6 +39,7 @@ export function ReportCheckboxCard({
   disabled,
   onChange,
   onPress,
+  style,
 }: ReportCheckboxCardProps) {
   return (
     <CheckboxCard
@@ -45,6 +48,7 @@ export function ReportCheckboxCard({
       disabled={disabled}
       onChange={onChange}
       onPress={onPress}
+      style={style}
       tone={tone}
       value={value}
     >

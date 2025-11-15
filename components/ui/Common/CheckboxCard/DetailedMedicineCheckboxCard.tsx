@@ -1,3 +1,4 @@
+import type { StyleProp, ViewStyle } from "react-native";
 import { StyledText } from "../StyledText";
 import { CheckboxCard } from "./CheckboxCard";
 import {
@@ -26,6 +27,7 @@ export type DetailedMedicineCheckboxCardProps = {
   disabled?: boolean;
   onChange?: (value: string, checked: boolean) => void;
   onPress?: (value: string, checked: boolean) => void;
+  style?: StyleProp<ViewStyle>;
 };
 
 const defaultTone: CheckboxCardTone = "secondary";
@@ -44,6 +46,7 @@ export function DetailedMedicineCheckboxCard({
   disabled,
   onChange,
   onPress,
+  style,
 }: DetailedMedicineCheckboxCardProps) {
   return (
     <CheckboxCard
@@ -52,6 +55,7 @@ export function DetailedMedicineCheckboxCard({
       disabled={disabled}
       onChange={onChange}
       onPress={onPress}
+      style={style}
       tone={tone}
       value={value}
     >

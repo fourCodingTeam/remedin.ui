@@ -34,12 +34,14 @@ export function Button({
   isLoading,
   disabled,
   variant,
+  spacedBetween,
   size,
   fullWidth,
   textSize,
   textColor,
   icon,
   onPress,
+  alignItems = "center",
   ...rest
 }: ButtonProps) {
   const getTextColorByButtonVariant = (variant: ButtonVariant) => {
@@ -69,10 +71,12 @@ export function Button({
   return (
     <ButtonWrapper
       activeOpacity={0.7}
+      alignItems={alignItems}
       disabled={disabled || isLoading}
       fullWidth={fullWidth}
       onPress={onPress}
       size={size}
+      spacedBetween={spacedBetween}
       variant={variant}
       {...rest}
     >

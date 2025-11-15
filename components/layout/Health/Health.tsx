@@ -1,20 +1,23 @@
 import { router } from "expo-router";
-import {
-  Archive,
-  Calendar,
-  LogOutIcon,
-  Settings,
-  User,
-} from "lucide-react-native";
 import { useState } from "react";
 import { signOut } from "@/auth/signOut";
 import { HealthInfoCard } from "@/components/ui";
 import { Header, RegisterHealthInfoCard } from "@/components/ui/Common";
+import {
+  memberSideMenuConfig,
+  sideMenuConfig,
+} from "@/constants/sideMenu.config";
 import { theme } from "@/constants/theme";
 import { useMemberStore } from "@/stores/MemberStore";
 import { useUserStore } from "@/stores/UserStore";
-import { PageWrapper } from "../Common";
-import { MedicineFormModal } from "../MedicineFormModal";
+import { PageWrapper } from "../Common/PageWrapper";
+import { CalendarModal } from "../Modals/CalendarModal";
+import { ConfigurationsModal } from "../Modals/ConfigurationsModal";
+import { MedicineFormModal } from "../Modals/MedicineFormModal";
+import { MedicinesModal } from "../Modals/MedicinesModal";
+import { NotificationsModal } from "../Modals/NotificationsModal";
+import { ProfileModal } from "../Modals/ProfileModal";
+import { ReportsModal } from "../Modals/ReportsModal";
 import {
   CardsWrapper,
   RegisterCardsWrapper,
@@ -52,14 +55,23 @@ export function Health({ isMemberApp = false }: HealthProps) {
 
   const { username } = useUserStore();
   const [activeModal, setActiveModal] = useState<HealthModalKey | null>(null);
-
+  const [isCalendarModalVisible, setIsCalendarModalVisible] = useState(false);
+  const [isProfileModalVisible, setIsProfileModalVisible] = useState(false);
+  const [isMedicinesModalVisible, setIsMedicinesModalVisible] = useState(false);
+  const [isReportsModalVisible, setIsReportsModalVisible] = useState(false);
+  const [isConfigurationsModalVisible, setIsConfigurationsModalVisible] =
+    useState(false);
+  const [isNotificationsModalVisible, setIsNotificationsModalVisible] =
+    useState(false);
   const openModal = (modal: HealthModalKey) => {
     setActiveModal(modal);
   };
 
-  const closeModal = (onClose?: () => void) => {
+  const closeModal = (maybeCallback?: unknown) => {
     setActiveModal(null);
-    onClose?.();
+    if (typeof maybeCallback === "function") {
+      maybeCallback();
+    }
   };
 
   const registerCardConfigs: Array<{
@@ -151,6 +163,10 @@ export function Health({ isMemberApp = false }: HealthProps) {
         isVisible={activeModal === "medicines"}
         onClose={() => closeModal()}
       />
+      <CalendarModal
+        isVisible={isCalendarModalVisible}
+        onClose={() => setIsCalendarModalVisible(false)}
+      />
     </>
   );
 
@@ -166,43 +182,15 @@ export function Health({ isMemberApp = false }: HealthProps) {
           header={
             <Header
               description="Como vai a saúde?"
-              sideMenu={{
-                userPhone: member.phoneNumber ?? undefined,
-                userName: member.name ?? undefined,
-                menuItems: [
-                  {
-                    id: "1",
-                    label: "Perfil",
-                    icon: () => <User size={18} />,
-                  },
-                  {
-                    id: "2",
-                    label: "Calendário",
-                    icon: () => <Calendar size={18} />,
-                  },
-                  {
-                    id: "3",
-                    label: "Medicações",
-                    icon: () => <Archive size={18} />,
-                  },
-                  {
-                    id: "4",
-                    label: "Configurações",
-                    icon: () => <Settings size={18} />,
-                  },
-                ],
-                footerAction: {
-                  label: "Sair",
-                  icon: () => (
-                    <LogOutIcon
-                      color={theme.colors.warnings.danger}
-                      size={18}
-                    />
-                  ),
-                  onPress: handleLogOut,
-                },
-              }}
-              usuario={`Sobre ${member.name ?? "Usuário"}`}
+              onBellPress={() => setIsNotificationsModalVisible(true)}
+              sideMenu={memberSideMenuConfig(member, handleLogOut, {
+                setIsCalendarModalVisible,
+                setIsProfileModalVisible,
+                setIsMedicinesModalVisible,
+                setIsReportsModalVisible,
+                setIsConfigurationsModalVisible,
+              })}
+              usuario={member.name ?? undefined}
             />
           }
           isScrollable
@@ -266,6 +254,26 @@ export function Health({ isMemberApp = false }: HealthProps) {
           </CardsWrapper>
         </PageWrapper>
         {modals}
+        <ProfileModal
+          isVisible={isProfileModalVisible}
+          onClose={() => setIsProfileModalVisible(false)}
+        />
+        <MedicinesModal
+          isVisible={isMedicinesModalVisible}
+          onClose={() => setIsMedicinesModalVisible(false)}
+        />
+        <ReportsModal
+          isVisible={isReportsModalVisible}
+          onClose={() => setIsReportsModalVisible(false)}
+        />
+        <ConfigurationsModal
+          isVisible={isConfigurationsModalVisible}
+          onClose={() => setIsConfigurationsModalVisible(false)}
+        />
+        <NotificationsModal
+          isVisible={isNotificationsModalVisible}
+          onClose={() => setIsNotificationsModalVisible(false)}
+        />
       </>
     );
   }
@@ -276,40 +284,15 @@ export function Health({ isMemberApp = false }: HealthProps) {
         header={
           <Header
             description="Como vai a saúde?"
-            sideMenu={{
-              userPhone: "99999999999",
-              userName: username ?? undefined,
-              menuItems: [
-                {
-                  id: "1",
-                  label: "Perfil",
-                  icon: () => <User size={18} />,
-                },
-                {
-                  id: "2",
-                  label: "Calendário",
-                  icon: () => <Calendar size={18} />,
-                },
-                {
-                  id: "3",
-                  label: "Medicações",
-                  icon: () => <Archive size={18} />,
-                },
-                {
-                  id: "4",
-                  label: "Configurações",
-                  icon: () => <Settings size={18} />,
-                },
-              ],
-              footerAction: {
-                label: "Sair",
-                icon: () => (
-                  <LogOutIcon color={theme.colors.warnings.danger} size={18} />
-                ),
-                onPress: handleLogOut,
-              },
-            }}
-            usuario={username ?? undefined}
+            onBellPress={() => setIsNotificationsModalVisible(true)}
+            sideMenu={sideMenuConfig(username ?? "Usuário", handleLogOut, {
+              setIsCalendarModalVisible,
+              setIsProfileModalVisible,
+              setIsMedicinesModalVisible,
+              setIsReportsModalVisible,
+              setIsConfigurationsModalVisible,
+            })}
+            usuario={username ?? "Usuário"}
           >
             <CardsWrapper>
               <ThreeCardsWrapper>
@@ -374,6 +357,26 @@ export function Health({ isMemberApp = false }: HealthProps) {
         </RegisterCardsWrapper>
       </PageWrapper>
       {modals}
+      <ProfileModal
+        isVisible={isProfileModalVisible}
+        onClose={() => setIsProfileModalVisible(false)}
+      />
+      <MedicinesModal
+        isVisible={isMedicinesModalVisible}
+        onClose={() => setIsMedicinesModalVisible(false)}
+      />
+      <ReportsModal
+        isVisible={isReportsModalVisible}
+        onClose={() => setIsReportsModalVisible(false)}
+      />
+      <ConfigurationsModal
+        isVisible={isConfigurationsModalVisible}
+        onClose={() => setIsConfigurationsModalVisible(false)}
+      />
+      <NotificationsModal
+        isVisible={isNotificationsModalVisible}
+        onClose={() => setIsNotificationsModalVisible(false)}
+      />
     </>
   );
 }

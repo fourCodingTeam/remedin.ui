@@ -18,13 +18,15 @@ export const ButtonWrapper = styled.TouchableOpacity<{
   fullWidth?: boolean;
   size?: "sm" | "md" | "lg";
   variant?: ButtonVariant;
+  spacedBetween?: boolean;
+  alignItems?: "center" | "flex-start" | "flex-end";
 }>`
   display: flex;
   flex-direction: row;
   gap: 8px;
   border-radius: 8px;
-  align-items: center;
-  justify-content: center;
+  align-items: ${({ alignItems = "center" }) => alignItems};
+  justify-content: ${({ spacedBetween }) => (spacedBetween ? "left" : "center")};
   ${({ fullWidth }) => fullWidth && "width: 100%;"}
   ${({ size = "md" }) => sizeStyles[size]}
 

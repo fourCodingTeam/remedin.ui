@@ -1,11 +1,14 @@
-import { useMemo } from "react";
-import { StyledText } from "..";
+import { ChevronLeft, ChevronRight } from "lucide-react-native";
+import { useEffect, useMemo, useState } from "react";
+import { TouchableOpacity } from "react-native";
+import { StyledText } from "../StyledText";
 import {
   CalendarContainer,
   DayButton,
   DaysGrid,
   Header,
   InnerWrapper,
+  MonthNavigationWrapper,
   WeekdayRow,
 } from "./Calendar.styles";
 import type { CalendarProps } from "./Calendar.types";
@@ -74,7 +77,7 @@ export function Calendar({
   weekStartsOn = 1,
   isDateDisabled,
 }: CalendarProps) {
-  const visibleDate = useMemo(() => new Date(currentDate), [currentDate]);
+  const [visibleDate, setVisibleDate] = useState(() => new Date(currentDate));
   const highlightedDate = selectedDate ?? visibleDate;
 
   const monthLabel = useMemo(
@@ -82,6 +85,10 @@ export function Calendar({
       `${getFormattedMonth(visibleDate, locale)} ${visibleDate.getFullYear()}`,
     [locale, visibleDate]
   );
+
+  useEffect(() => {
+    setVisibleDate(new Date(currentDate));
+  }, [currentDate]);
 
   const weekdayLabels = useMemo(
     () => getWeekdayLabels(locale, weekStartsOn),
@@ -93,12 +100,42 @@ export function Calendar({
     [visibleDate, weekStartsOn]
   );
 
+  const monthNavigate = (direction: "previous" | "next") => {
+    setVisibleDate((prev) => {
+      const nextVisible = new Date(prev);
+
+      if (direction === "previous") {
+        nextVisible.setMonth(nextVisible.getMonth() - 1);
+      } else {
+        nextVisible.setMonth(nextVisible.getMonth() + 1);
+      }
+
+      return nextVisible;
+    });
+  };
+
   return (
     <CalendarContainer>
       <Header>
         <StyledText variant="largeSemiBold">
           {monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1)}
         </StyledText>
+        <MonthNavigationWrapper>
+          <TouchableOpacity
+            onPress={() => {
+              monthNavigate("previous");
+            }}
+          >
+            <ChevronLeft />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              monthNavigate("next");
+            }}
+          >
+            <ChevronRight />
+          </TouchableOpacity>
+        </MonthNavigationWrapper>
       </Header>
 
       <InnerWrapper>
