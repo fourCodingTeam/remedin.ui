@@ -34,7 +34,9 @@ export async function registerPerson(
   }
 }
 
-export async function GetCurrentPerson(token: string): Promise<BaseResponse> {
+export async function GetCurrentPerson(
+  token: string
+): Promise<BaseResponse<PersonResponse>> {
   try {
     const response = await fetch(`${API_BASE_URL}/Person`, {
       method: "GET",
@@ -43,13 +45,29 @@ export async function GetCurrentPerson(token: string): Promise<BaseResponse> {
       },
     });
 
+    const data = (await response.json()) as BaseResponse<PersonResponse>;
+
     if (!response.ok) {
-      throw new Error(`Failed to get resident: ${response.status}`);
+      return {
+        success: false,
+        code: response.status,
+        message:
+          data.message ||
+          `Erro ao buscar dados do usuário (${response.status})`,
+        data: undefined,
+      };
     }
 
-    const data = await response.json();
-    return data as BaseResponse<PersonResponse>;
+    return data;
   } catch (error) {
-    throw new Error(`Failed to get resident ${error}`);
+    return {
+      success: false,
+      code: 0,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Erro ao buscar dados do usuário",
+      data: undefined,
+    };
   }
 }

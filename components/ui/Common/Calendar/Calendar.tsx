@@ -41,13 +41,16 @@ const getFormattedMonth = (date: Date, locale: string) =>
 const TRAILING_DOT_REGEX = /\.?$/;
 
 const getWeekdayLabels = (locale: string, weekStartsOn: number) => {
-  const baseDate = new Date(Date.UTC(2023, 0, 1));
+  // Use a known Sunday as base date (January 1, 2023 was a Sunday)
+  // Create date in local time to avoid timezone issues
+  const baseDate = new Date(2023, 0, 1); // January 1, 2023 (Sunday)
 
-  const labels = Array.from({ length: DAYS_IN_WEEK }).map((_, index) =>
-    addDays(baseDate, index).toLocaleDateString(locale, {
+  const labels = Array.from({ length: DAYS_IN_WEEK }).map((_, index) => {
+    const date = addDays(baseDate, index);
+    return date.toLocaleDateString(locale, {
       weekday: "short",
-    })
-  );
+    });
+  });
 
   return labels
     .map((label) => label.replace(TRAILING_DOT_REGEX, ""))
@@ -55,18 +58,30 @@ const getWeekdayLabels = (locale: string, weekStartsOn: number) => {
     .concat(labels.slice(0, weekStartsOn));
 };
 
+const normalizeDate = (date: Date): Date =>
+  new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
 const buildCalendarDays = (
   referenceDate: Date,
   weekStartsOn: number
 ): Date[] => {
-  const startOfMonth = getStartOfMonth(referenceDate);
+  // Normalize reference date to avoid timezone issues
+  const normalizedRef = normalizeDate(referenceDate);
+
+  const startOfMonth = getStartOfMonth(normalizedRef);
   const startWeekday = startOfMonth.getDay();
+
+  // Calculate offset: how many days back from start of month to reach the start of the week
+  // getDay() returns: 0=Sunday, 1=Monday, ..., 6=Saturday
+  // weekStartsOn: 0=Sunday, 1=Monday, ..., 6=Saturday
   const offset = (startWeekday - weekStartsOn + DAYS_IN_WEEK) % DAYS_IN_WEEK;
   const gridStartDate = addDays(startOfMonth, -offset);
 
-  return Array.from({ length: TOTAL_GRID_DAYS }).map((_, index) =>
-    addDays(gridStartDate, index)
-  );
+  return Array.from({ length: TOTAL_GRID_DAYS }).map((_, index) => {
+    const day = addDays(gridStartDate, index);
+    // Normalize each day to avoid timezone shifts
+    return normalizeDate(day);
+  });
 };
 
 export function Calendar({
@@ -77,8 +92,12 @@ export function Calendar({
   weekStartsOn = 1,
   isDateDisabled,
 }: CalendarProps) {
-  const [visibleDate, setVisibleDate] = useState(() => new Date(currentDate));
-  const highlightedDate = selectedDate ?? visibleDate;
+  const [visibleDate, setVisibleDate] = useState(() =>
+    normalizeDate(currentDate)
+  );
+  const highlightedDate = selectedDate
+    ? normalizeDate(selectedDate)
+    : visibleDate;
 
   const monthLabel = useMemo(
     () =>
@@ -87,7 +106,7 @@ export function Calendar({
   );
 
   useEffect(() => {
-    setVisibleDate(new Date(currentDate));
+    setVisibleDate(normalizeDate(currentDate));
   }, [currentDate]);
 
   const weekdayLabels = useMemo(

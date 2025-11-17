@@ -42,6 +42,7 @@ export function ModalBase({
             button.map((button) => (
               <Button
                 fullWidth
+                isLoading={button.isLoading}
                 key={`${button.label}-${button.variant}`}
                 label={button.label}
                 onPress={button.onPress}

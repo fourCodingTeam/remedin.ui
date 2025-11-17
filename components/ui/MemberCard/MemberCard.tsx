@@ -20,8 +20,9 @@ export function MemberCard({
 }: MemberCardProps) {
   const { userId } = useUserStore();
 
-  const getBackgroundColor = (id: number) => {
-    if (id === userId) {
+  const getBackgroundColor = (memberId: string | number) => {
+    const memberIdStr = String(memberId);
+    if (userId && memberIdStr === userId) {
       return theme.colors.accent.primary;
     }
     return theme.colors.accent.secondary;

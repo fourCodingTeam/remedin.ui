@@ -1,7 +1,8 @@
 export type AuthModalProps = {
   isVisible: boolean;
-
+  mode: "login" | "register";
   onClose: () => void;
+  onGoogleLogin?: () => void;
 };
 
 export type AuthViewProps = {
@@ -9,9 +10,7 @@ export type AuthViewProps = {
 };
 
 export interface AuthLoginProps extends AuthViewProps {
-  onNavigateToRegister: () => void;
+  onGoogleLogin?: () => void;
 }
 
-export interface AuthRegisterProps extends AuthViewProps {
-  onNavigateToLogin: () => void;
-}
+export interface AuthRegisterProps extends AuthViewProps {}

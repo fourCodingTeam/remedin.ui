@@ -1,21 +1,15 @@
-import { useState } from "react";
 import { Modal } from "react-native";
 import { AuthLogin } from "./AuthLogin";
 import { ModalView } from "./AuthModal.styles";
 import type { AuthModalProps } from "./AuthModal.types";
 import { AuthRegister } from "./AuthRegister";
 
-export function AuthModal({ isVisible, onClose }: AuthModalProps) {
-  const [currentView, setCurrentView] = useState<"login" | "register">("login");
-
-  const handleNavigateToRegister = () => {
-    setCurrentView("register");
-  };
-
-  const handleNavigateToLogin = () => {
-    setCurrentView("login");
-  };
-
+export function AuthModal({
+  isVisible,
+  mode,
+  onClose,
+  onGoogleLogin,
+}: AuthModalProps) {
   return (
     <Modal
       animationType="slide"
@@ -24,16 +18,10 @@ export function AuthModal({ isVisible, onClose }: AuthModalProps) {
       visible={isVisible}
     >
       <ModalView>
-        {currentView === "login" ? (
-          <AuthLogin
-            onClose={onClose}
-            onNavigateToRegister={handleNavigateToRegister}
-          />
+        {mode === "login" ? (
+          <AuthLogin onClose={onClose} onGoogleLogin={onGoogleLogin} />
         ) : (
-          <AuthRegister
-            onClose={onClose}
-            onNavigateToLogin={handleNavigateToLogin}
-          />
+          <AuthRegister onClose={onClose} />
         )}
       </ModalView>
     </Modal>

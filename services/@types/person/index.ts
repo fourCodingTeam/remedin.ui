@@ -16,8 +16,8 @@ export type PersonResponse = {
   username: string;
   birthDate: string | null;
   phone: string | null;
-  weightKg?: number | null;
-  heightCm?: number | null;
+  weightKg: number | null;
+  heightCm: number | null;
   createdAt: string;
   updatedAt: string;
   supabaseUserId: string;

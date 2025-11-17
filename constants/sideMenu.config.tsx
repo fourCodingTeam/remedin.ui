@@ -65,11 +65,12 @@ export const memberSideMenuConfig = (
 
 export const sideMenuConfig = (
   username: string,
+  phoneNumber: string,
   handleLogOut: () => void,
   handlers: SideMenuModalHandlers
 ) => ({
   userName: username ?? undefined,
-  userPhone: "99999999999",
+  userPhone: phoneNumber ?? undefined,
   menuItems: [
     {
       id: "1",

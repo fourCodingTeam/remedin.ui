@@ -6,9 +6,14 @@ import type { TDCalendarProps } from "./TDCalendar.types";
 const DAY_OFFSETS = [-1, 0, 1] as const;
 
 const normalizeDate = (date: Date) => {
-  const normalizedDate = new Date(date);
-  normalizedDate.setHours(0, 0, 0, 0);
-  return normalizedDate;
+  // Use local time components to avoid timezone shifts
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+};
+
+const getToday = (): Date => {
+  // Get today's date using local time components
+  const now = new Date();
+  return normalizeDate(now);
 };
 
 const getRelativeDate = (baseDate: Date, offset: number) => {
@@ -19,6 +24,15 @@ const getRelativeDate = (baseDate: Date, offset: number) => {
 
 const getDayName = (targetDate: Date) =>
   targetDate.toLocaleString("pt-BR", { weekday: "short" });
+
+const isToday = (date: Date): boolean => {
+  const today = getToday();
+  return (
+    date.getFullYear() === today.getFullYear() &&
+    date.getMonth() === today.getMonth() &&
+    date.getDate() === today.getDate()
+  );
+};
 
 export function TDCalendar({ date, onDateChange }: TDCalendarProps) {
   const [selectedDate, setSelectedDate] = useState<Date>(normalizeDate(date));
@@ -57,9 +71,7 @@ export function TDCalendar({ date, onDateChange }: TDCalendarProps) {
           onPress={() => handleDatePress(day)}
         >
           <StyledText variant="mediumSemiBold">
-            {day.getDate() === new Date().getDate()
-              ? `Hoje - ${day.getDate()}`
-              : day.getDate()}
+            {isToday(day) ? `Hoje - ${day.getDate()}` : day.getDate()}
           </StyledText>
           <StyledText variant="smallRegular">{getDayName(day)}</StyledText>
         </TDCalendarDay>

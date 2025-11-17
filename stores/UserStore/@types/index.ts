@@ -3,8 +3,8 @@ export type UserState = {
   setIsLoggedIn: (isLoggedIn: boolean) => void;
   isLoggingIn: boolean;
   setIsLoggingIn: (isLoggingIn: boolean) => void;
-  userId: number | null;
-  setUserId: (personId: number | null) => void;
+  userId: string | null;
+  setUserId: (personId: string | null) => void;
   username: string | null;
   setUsername: (username: string | null) => void;
   email: string | null;
@@ -13,5 +13,23 @@ export type UserState = {
   setRole: (role: string | null) => void;
   token: string | null;
   setToken: (token: string | null) => void;
+  phoneNumber: string | null;
+  setPhoneNumber: (phoneNumber: string | null) => void;
+  birthDate: string | null;
+  setBirthDate: (birthDate: string | null) => void;
+  weightKg: number | null;
+  setWeightKg: (weightKg: number | null) => void;
+  heightCm: number | null;
+  setHeightCm: (heightCm: number | null) => void;
   signOut: () => void;
+  setPersonData: (person: {
+    id: string;
+    name: string;
+    email: string;
+    username: string;
+    phone: string | null;
+    birthDate: string | null;
+    weightKg: number | null;
+    heightCm: number | null;
+  }) => void;
 };

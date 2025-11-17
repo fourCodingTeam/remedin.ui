@@ -4,3 +4,8 @@ export function formatDateToDDMMYYYY(d: Date) {
   const day = String(d.getDate()).padStart(2, "0");
   return `${day}-${m}-${y}`;
 }
+
+export * from "./dateOnly";
+export * from "./time";
+export * from "./timeOnly";
+export * from "./timeOnlyToDate";

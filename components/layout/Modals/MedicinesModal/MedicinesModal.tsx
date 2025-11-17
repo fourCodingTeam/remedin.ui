@@ -1,55 +1,124 @@
 import { Archive, Edit, Plus, Trash2 } from "lucide-react-native";
-import { useState } from "react";
-import { Button } from "@/components/ui";
+import { useCallback, useEffect, useState } from "react";
+import { Button, StyledText } from "@/components/ui";
 import { DetailedMedicineCheckboxCard } from "@/components/ui/Common/CheckboxCard";
+import { useToast } from "@/components/ui/Toast";
+import { dosageUnitLabels } from "@/services/@types/enums";
+import type { MedicineDtoResponse } from "@/services/@types/medicine";
+import { getAllMedicines } from "@/services/api/medicine";
+import { getAllSchedules } from "@/services/api/schedule";
+import { getAuthToken } from "@/services/utils/getAuthToken";
+import { formatDateOnlyToDisplay } from "@/utils/DateFormatters/dateOnly";
+import { formatTimeOnlyToDisplay } from "@/utils/DateFormatters/timeOnly";
 import { ModalPageWrapper } from "../../Common/ModalPageWrapper";
 import {
   ButtonsWrapper,
   FormContentWrapper,
   ScrollableContentWrapper,
 } from "../../styles";
+import { MedicineFormModal } from "../MedicineFormModal/MedicineFormModal";
 import { MedicineDeleteModal } from "./MedicineDeleteModal";
 import { MedicineEditModal } from "./MedicineEditModal";
 import type { MedicinesModalProps } from "./MedicinesModal.types";
 
-// Mock data matching the image
-const medicinesMock = [
-  {
-    id: "1",
-    name: "Trenbolona",
-    dosage: "1g",
-    periodStart: "28/09/2025",
-    periodEnd: "29/10/2025",
-    times: ["23h00", "07h00", "15h00"],
-    note: "Tomar depois do treino",
-  },
-  {
-    id: "2",
-    name: "Dipirona",
-    dosage: "1g",
-    periodLabel: "Uso contínuo",
-    times: ["22h00", "06h00", "14h00"],
-    note: "Tomar depois do treino",
-  },
-  {
-    id: "23",
-    name: "Dipirona",
-    dosage: "1g",
-    periodLabel: "Uso contínuo",
-    times: ["22h00", "06h00", "14h00"],
-    note: "Tomar depois do treino",
-  },
-];
+type MedicineWithSchedules = MedicineDtoResponse & {
+  scheduleTimes: string[];
+};
+
+function getSchedulesFromResponse(
+  schedulesResponse: Awaited<ReturnType<typeof getAllSchedules>>
+) {
+  if (schedulesResponse.success && schedulesResponse.data) {
+    return schedulesResponse.data.items;
+  }
+  return [];
+}
+
+function mapSchedulesToMedicines(
+  medicines: MedicineDtoResponse[],
+  schedulesResponse: Awaited<ReturnType<typeof getAllSchedules>>
+): MedicineWithSchedules[] {
+  const scheduleItems = getSchedulesFromResponse(schedulesResponse);
+
+  return medicines.map((medicine) => {
+    const medicineSchedules = scheduleItems.filter(
+      (schedule) => schedule.medicineId === medicine.id
+    );
+    const scheduleTimes = medicineSchedules.map((schedule) =>
+      formatTimeOnlyToDisplay(schedule.scheduledTime)
+    );
+
+    return {
+      ...medicine,
+      scheduleTimes,
+    };
+  });
+}
 
 export function MedicinesModal({ isVisible, onClose }: MedicinesModalProps) {
+  const [medicines, setMedicines] = useState<MedicineWithSchedules[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [selectedMedicines, setSelectedMedicines] = useState<Set<string>>(
     new Set()
   );
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
-  const [editingMedicine, setEditingMedicine] = useState<
-    (typeof medicinesMock)[0] | null
-  >(null);
+  const [isMedicineFormModalVisible, setIsMedicineFormModalVisible] =
+    useState(false);
+  const [editingMedicine, setEditingMedicine] =
+    useState<MedicineDtoResponse | null>(null);
+  const { showToast } = useToast();
+
+  const loadMedicines = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        showToast(
+          "Você precisa estar autenticado para ver as medicações",
+          "error"
+        );
+        return;
+      }
+
+      const [medicinesResponse, schedulesResponse] = await Promise.all([
+        getAllMedicines(token, 1, 100),
+        getAllSchedules(token, 1, 1000),
+      ]);
+
+      if (!medicinesResponse.success) {
+        showToast(
+          medicinesResponse.message || "Erro ao carregar medicações",
+          "error"
+        );
+        return;
+      }
+
+      if (!medicinesResponse.data) {
+        showToast("Nenhuma medicação encontrada", "info");
+        return;
+      }
+
+      const medicinesWithSchedules = mapSchedulesToMedicines(
+        medicinesResponse.data.items,
+        schedulesResponse
+      );
+
+      setMedicines(medicinesWithSchedules);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Erro ao carregar medicações";
+      showToast(errorMessage, "error");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [showToast]);
+
+  useEffect(() => {
+    if (isVisible) {
+      loadMedicines();
+    }
+  }, [isVisible, loadMedicines]);
 
   const handleToggleMedicine = (id: string, checked: boolean) => {
     const newSelected = new Set(selectedMedicines);
@@ -67,7 +136,7 @@ export function MedicinesModal({ isVisible, onClose }: MedicinesModalProps) {
 
   const handleEdit = () => {
     const selectedId = Array.from(selectedMedicines)[0];
-    const medicine = medicinesMock.find((m) => m.id === selectedId);
+    const medicine = medicines.find((m) => m.id === selectedId);
     if (medicine) {
       setEditingMedicine(medicine);
       setIsEditModalVisible(true);
@@ -75,8 +144,85 @@ export function MedicinesModal({ isVisible, onClose }: MedicinesModalProps) {
   };
 
   const handleAddMedicine = () => {
-    // This would open the MedicineFormModal
-    onClose();
+    setIsMedicineFormModalVisible(true);
+  };
+
+  const handleFormModalClose = () => {
+    setIsMedicineFormModalVisible(false);
+    loadMedicines();
+  };
+
+  const handleDeleteConfirm = () => {
+    // TODO: Implement delete functionality when backend endpoint is available
+    setIsDeleteModalVisible(false);
+    setSelectedMedicines(new Set());
+    showToast("Funcionalidade de deletar em desenvolvimento", "info");
+  };
+
+  const handleEditClose = () => {
+    setIsEditModalVisible(false);
+    setEditingMedicine(null);
+    loadMedicines();
+  };
+
+  const renderMedicinesList = () => {
+    if (isLoading) {
+      return (
+        <StyledText
+          color="muted"
+          style={{ textAlign: "center", marginTop: 16 }}
+          variant="mediumRegular"
+        >
+          Carregando medicações...
+        </StyledText>
+      );
+    }
+
+    if (medicines.length === 0) {
+      return (
+        <StyledText
+          color="muted"
+          style={{ textAlign: "center", marginTop: 16 }}
+          variant="mediumRegular"
+        >
+          Nenhuma medicação cadastrada.
+        </StyledText>
+      );
+    }
+
+    return medicines.map((medicine) => {
+      const dosageLabel = dosageUnitLabels[medicine.dosageUnit];
+      const dosageDisplay = `${medicine.dosageValue} ${dosageLabel}`;
+      const hasEndDate = medicine.endDate !== null;
+
+      return (
+        <DetailedMedicineCheckboxCard
+          checked={selectedMedicines.has(medicine.id)}
+          instructions={medicine.observations || undefined}
+          key={medicine.id}
+          onChange={(_, checked) => handleToggleMedicine(medicine.id, checked)}
+          periodLabel={hasEndDate ? undefined : "Uso contínuo"}
+          periodRange={
+            hasEndDate
+              ? {
+                  start: formatDateOnlyToDisplay(medicine.startDate),
+                  end: formatDateOnlyToDisplay(medicine.endDate),
+                }
+              : {
+                  start: formatDateOnlyToDisplay(medicine.startDate),
+                }
+          }
+          scheduleTimes={
+            medicine.scheduleTimes.length > 0
+              ? medicine.scheduleTimes
+              : undefined
+          }
+          style={{ marginTop: 8 }}
+          title={`${medicine.name} - ${dosageDisplay}`}
+          value={medicine.id}
+        />
+      );
+    });
   };
 
   return (
@@ -92,29 +238,7 @@ export function MedicinesModal({ isVisible, onClose }: MedicinesModalProps) {
       >
         <FormContentWrapper>
           <ScrollableContentWrapper>
-            {medicinesMock.map((medicine) => (
-              <DetailedMedicineCheckboxCard
-                checked={selectedMedicines.has(medicine.id)}
-                instructions={medicine.note}
-                key={medicine.id}
-                onChange={(_, checked) =>
-                  handleToggleMedicine(medicine.id, checked)
-                }
-                periodLabel={medicine.periodLabel}
-                periodRange={
-                  medicine.periodStart && medicine.periodEnd
-                    ? {
-                        start: medicine.periodStart,
-                        end: medicine.periodEnd,
-                      }
-                    : undefined
-                }
-                scheduleTimes={medicine.times}
-                style={{ marginTop: 8 }}
-                title={`${medicine.name} - ${medicine.dosage}`}
-                value={medicine.id}
-              />
-            ))}
+            {renderMedicinesList()}
           </ScrollableContentWrapper>
         </FormContentWrapper>
         <ButtonsWrapper addPadding>
@@ -145,19 +269,18 @@ export function MedicinesModal({ isVisible, onClose }: MedicinesModalProps) {
       <MedicineDeleteModal
         isVisible={isDeleteModalVisible}
         onClose={() => setIsDeleteModalVisible(false)}
-        onConfirm={() => {
-          setIsDeleteModalVisible(false);
-          setSelectedMedicines(new Set());
-        }}
+        onConfirm={handleDeleteConfirm}
       />
 
       <MedicineEditModal
         isVisible={isEditModalVisible}
         medicine={editingMedicine}
-        onClose={() => {
-          setIsEditModalVisible(false);
-          setEditingMedicine(null);
-        }}
+        onClose={handleEditClose}
+      />
+
+      <MedicineFormModal
+        isVisible={isMedicineFormModalVisible}
+        onClose={handleFormModalClose}
       />
     </>
   );

@@ -6,3 +6,11 @@ export const SideBySideInputsWrapper = styled.View`
   flex-direction: row;
   gap: ${theme.sizes[2]};
 `;
+
+export const WeekDaysWrapper = styled.View`
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: ${theme.sizes[2]};
+  margin-top: ${theme.sizes[2]};
+`;

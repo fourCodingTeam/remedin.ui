@@ -6,6 +6,7 @@ import { InputBase } from "@/components/ui";
 import { Button } from "@/components/ui/Common/Button"; //
 import { StyledText } from "@/components/ui/Common/StyledText";
 import { useToast } from "@/components/ui/Toast";
+import { GetCurrentPerson } from "@/services/api/person";
 import { useUserStore } from "@/stores";
 import { type LoginFormData, loginSchema } from "@/validators";
 import {
@@ -19,8 +20,9 @@ import {
 } from "../AuthModal.styles";
 import type { AuthLoginProps } from "../AuthModal.types";
 
-export function AuthLogin({ onClose, onNavigateToRegister }: AuthLoginProps) {
-  const { setIsLoggedIn, setUsername, setEmail, setToken } = useUserStore();
+export function AuthLogin({ onClose, onGoogleLogin }: AuthLoginProps) {
+  const { setIsLoggedIn, setUsername, setEmail, setToken, setPersonData } =
+    useUserStore();
   const { showToast } = useToast();
 
   const [authError, setAuthError] = useState<string | null>(null);
@@ -44,17 +46,41 @@ export function AuthLogin({ onClose, onNavigateToRegister }: AuthLoginProps) {
       setIsSubmitting(true);
 
       const response = await signInWithEmail(data.email, data.password);
+      const token = response.session.access_token;
 
-      setUsername(response.user.user_metadata.username);
+      setToken(token);
       setEmail(data.email);
-      setToken(response.session.access_token);
+
+      // Get person data from backend
+      const personResponse = await GetCurrentPerson(token);
+      if (personResponse.success && personResponse.data) {
+        setPersonData({
+          id: personResponse.data.id,
+          name: personResponse.data.name,
+          email: personResponse.data.email,
+          username: personResponse.data.username,
+          phone: personResponse.data.phone,
+          birthDate: personResponse.data.birthDate,
+          weightKg: personResponse.data.weightKg,
+          heightCm: personResponse.data.heightCm,
+        });
+      } else {
+        // Fallback to metadata if backend call fails
+        setUsername(
+          response.user.user_metadata.username || response.user.email || null
+        );
+      }
 
       setIsLoggedIn(true);
       showToast("Login realizado com sucesso!", "success");
       onClose();
-    } catch {
-      setAuthError("Não foi possível fazer login. Tente novamente.");
-      showToast("Não foi possível fazer login. Tente novamente.", "error");
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Não foi possível fazer login. Tente novamente.";
+      setAuthError(errorMessage);
+      showToast(errorMessage, "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -140,14 +166,16 @@ export function AuthLogin({ onClose, onNavigateToRegister }: AuthLoginProps) {
           onPress={handleLoginPress}
           variant="black"
         />
-        <Button
-          disabled={isSubmitting}
-          fullWidth
-          label="Não tem uma conta?"
-          onPress={onNavigateToRegister}
-          textColor="dark"
-          variant="empty"
-        />
+        {onGoogleLogin && (
+          <Button
+            disabled={isSubmitting}
+            fullWidth
+            label="Entrar com Google"
+            onPress={onGoogleLogin}
+            textColor="dark"
+            variant="empty"
+          />
+        )}
       </BottomContainer>
     </>
   );

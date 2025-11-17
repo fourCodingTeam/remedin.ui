@@ -13,6 +13,7 @@ export type ModalBaseProps = {
       | "outline"
       | "empty";
     onPress: () => void;
+    isLoading?: boolean;
   }[];
   children?: React.ReactNode;
 };

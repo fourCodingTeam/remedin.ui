@@ -1,6 +1,9 @@
 import { useState } from "react";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-import { formatDateToDDMMYYYY } from "@/utils/DateFormatters";
+import {
+  formatDateToDDMMYYYY,
+  formatTimeToDisplay,
+} from "@/utils/DateFormatters";
 import { InputBase } from "../InputBase";
 import type { InputDateProps } from "./InputData.types";
 
@@ -25,15 +28,27 @@ export function InputDate({
     onChange?.(date);
   };
 
+  const getDisplayValue = () => {
+    if (!value) {
+      return "";
+    }
+    if (mode === "time") {
+      return formatTimeToDisplay(value);
+    }
+    return formatDateToDDMMYYYY(value);
+  };
+
+  const suffixIcon = mode === "time" ? "clock" : "calendar";
+
   return (
     <>
       <InputBase
-        suffixIcon="calendar"
-        {...(rest as any)}
+        suffixIcon={suffixIcon}
+        {...(rest as Record<string, unknown>)}
         editable={false}
         onPressIn={() => setVisible(true)}
         placeholder={placeholder}
-        value={value ? formatDateToDDMMYYYY(value) : ""}
+        value={getDisplayValue()}
       />
 
       <DateTimePickerModal

@@ -9,9 +9,11 @@ import {
   memberSideMenuConfig,
   sideMenuConfig,
 } from "@/constants/sideMenu.config";
-import { medicinesMock } from "@/services/mock/medicines";
+import { useMedicines } from "@/hooks/useMedicines";
 import { useMemberStore } from "@/stores/MemberStore";
 import { useUserStore } from "@/stores/UserStore";
+import { getDateFromKey, getDateKey } from "@/utils/date/dateKey";
+import { mapMedicinesToCardsForDate } from "@/utils/medicine/medicineCardMapper";
 import { PageWrapper } from "../Common/PageWrapper";
 import { CalendarModal } from "../Modals/CalendarModal/CalendarModal";
 import { ConfigurationsModal } from "../Modals/ConfigurationsModal";
@@ -24,10 +26,16 @@ import { ButtonsWrapper, ScrollableContentWrapper } from "../styles";
 import type { HomeProps } from "./Home.types";
 
 export default function Home({ isMemberApp = false }: HomeProps) {
-  const { username, signOut } = useUserStore();
+  const { username, signOut, phoneNumber } = useUserStore();
   const { member } = useMemberStore();
   const { showToast } = useToast();
-  const [selectedDate, setSelectedDate] = useState(() => new Date());
+  const { medicines, isLoading, reloadMedicines } = useMedicines();
+  const getTodayDate = () => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  };
+
+  const [selectedDate, setSelectedDate] = useState(() => getTodayDate());
   const [selectedFilter, setSelectedFilter] = useState<
     string | number | undefined
   >();
@@ -50,16 +58,55 @@ export default function Home({ isMemberApp = false }: HomeProps) {
     { label: "Mais distantes", value: "furthest" },
   ];
 
-  const selectedDateKey = useMemo(() => {
-    const dateCopy = new Date(selectedDate);
-    dateCopy.setHours(0, 0, 0, 0);
-    return dateCopy.toISOString().split("T")[0];
-  }, [selectedDate]);
+  const selectedDateKey = useMemo(
+    () => getDateKey(selectedDate),
+    [selectedDate]
+  );
 
-  const medicinesForSelectedDate = useMemo(
-    () => medicinesMock.filter((medicine) => medicine.date === selectedDateKey),
+  const selectedDateObj = useMemo(
+    () => getDateFromKey(selectedDateKey),
     [selectedDateKey]
   );
+
+  const medicinesForSelectedDate = useMemo(
+    () =>
+      mapMedicinesToCardsForDate(medicines, selectedDateObj, selectedDateKey),
+    [medicines, selectedDateObj, selectedDateKey]
+  );
+
+  const renderMedicinesList = () => {
+    if (isLoading) {
+      return (
+        <StyledText
+          color="muted"
+          style={{ textAlign: "center", marginTop: 16 }}
+          variant="mediumRegular"
+        >
+          Carregando medicações...
+        </StyledText>
+      );
+    }
+
+    if (medicinesForSelectedDate.length === 0) {
+      return (
+        <StyledText
+          color="muted"
+          style={{ textAlign: "center", marginTop: 4 }}
+          variant="mediumRegular"
+        >
+          Nenhuma medicação para esta data.
+        </StyledText>
+      );
+    }
+
+    return medicinesForSelectedDate.map(({ id, card }) => (
+      <MedicineCheckboxCard
+        key={id}
+        {...card}
+        style={{ marginTop: 4, marginBottom: 4 }}
+      />
+    ));
+  };
 
   const handleLogOut = async () => {
     await signOut();
@@ -110,28 +157,13 @@ export default function Home({ isMemberApp = false }: HomeProps) {
           value={selectedFilter}
         />
         <ScrollableContentWrapper>
-          {medicinesForSelectedDate.length === 0 ? (
-            <StyledText
-              color="muted"
-              style={{ textAlign: "center", marginTop: 4 }}
-              variant="mediumRegular"
-            >
-              Nenhuma medicação para esta data.
-            </StyledText>
-          ) : (
-            medicinesForSelectedDate.map(({ id, card }) => (
-              <MedicineCheckboxCard
-                key={id}
-                {...card}
-                style={{ marginTop: 4, marginBottom: 4 }}
-              />
-            ))
-          )}
+          {renderMedicinesList()}
         </ScrollableContentWrapper>
         <MedicineFormModal
           isVisible={isMedicineFormModalVisible}
           onClose={() => {
             setIsMedicineFormModalVisible(false);
+            reloadMedicines();
           }}
         />
         <CalendarModal
@@ -168,13 +200,18 @@ export default function Home({ isMemberApp = false }: HomeProps) {
         <Header
           description="Como está se sentindo hoje?"
           onBellPress={() => setIsNotificationsModalVisible(true)}
-          sideMenu={sideMenuConfig(username ?? "Usuário", handleLogOut, {
-            setIsCalendarModalVisible,
-            setIsProfileModalVisible,
-            setIsMedicinesModalVisible,
-            setIsReportsModalVisible,
-            setIsConfigurationsModalVisible,
-          })}
+          sideMenu={sideMenuConfig(
+            username ?? "Usuário",
+            phoneNumber ?? "",
+            handleLogOut,
+            {
+              setIsCalendarModalVisible,
+              setIsProfileModalVisible,
+              setIsMedicinesModalVisible,
+              setIsReportsModalVisible,
+              setIsConfigurationsModalVisible,
+            }
+          )}
           usuario={username ?? "Usuário"}
         >
           <TDCalendar date={selectedDate} onDateChange={setSelectedDate} />
@@ -204,28 +241,13 @@ export default function Home({ isMemberApp = false }: HomeProps) {
         value={selectedFilter}
       />
       <ScrollableContentWrapper>
-        {medicinesForSelectedDate.length === 0 ? (
-          <StyledText
-            color="muted"
-            style={{ textAlign: "center", marginTop: 8 }}
-            variant="mediumRegular"
-          >
-            Nenhuma medicação para esta data.
-          </StyledText>
-        ) : (
-          medicinesForSelectedDate.map(({ id, card }) => (
-            <MedicineCheckboxCard
-              key={id}
-              {...card}
-              style={{ marginTop: 4, marginBottom: 4 }}
-            />
-          ))
-        )}
+        {renderMedicinesList()}
       </ScrollableContentWrapper>
       <MedicineFormModal
         isVisible={isMedicineFormModalVisible}
         onClose={() => {
           setIsMedicineFormModalVisible(false);
+          reloadMedicines();
         }}
       />
       <CalendarModal
