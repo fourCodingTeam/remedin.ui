@@ -44,4 +44,3 @@ export function groupMedicinesByHour(
 
   return result;
 }
-

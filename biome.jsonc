@@ -6,7 +6,8 @@
       "style": {
         "noMagicNumbers": "off",
         "useFilenamingConvention": "off",
-        "noNestedTernary": "warn"
+        "noNestedTernary": "warn",
+        "useBlockStatements": "off"
       },
       "performance": {
         "noBarrelFile": "off",
@@ -15,6 +16,10 @@
       "correctness": {
         "noUndeclaredVariables": "off",
         "noUnusedFunctionParameters": "warn"
+      },
+      "complexity": {
+        "useExhaustiveDependencies": "off",
+        "noExcessiveNestedTest": "off"
       },
       "nursery": {
         "noShadow": "off",

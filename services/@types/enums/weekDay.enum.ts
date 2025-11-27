@@ -17,4 +17,3 @@ export const weekDayLabels: Record<WeekDay, string> = {
   [WeekDay.Saturday]: "Sábado",
   [WeekDay.Sunday]: "Domingo",
 };
-

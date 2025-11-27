@@ -5,15 +5,18 @@ import type {
   MedicineDtoResponse,
   UpdateMedicineRequest,
 } from "@/services/@types/medicine";
+import { convertDosageUnitFromBackend } from "@/utils/medicine/dosageUnitConverter";
 
 export async function getAllMedicines(
   token: string,
   page: number,
-  pageSize: number
+  pageSize: number,
+  memberId?: string | null
 ): Promise<BaseResponse<PagedResult<MedicineDtoResponse>>> {
   try {
+    const memberIdParam = memberId ? `&memberId=${memberId}` : "";
     const response = await fetch(
-      `${API_BASE_URL}/Medicine?page=${page}&pageSize=${pageSize}`,
+      `${API_BASE_URL}/Medicine?page=${page}&pageSize=${pageSize}${memberIdParam}`,
       {
         method: "GET",
         headers: {
@@ -39,6 +42,14 @@ export async function getAllMedicines(
       };
     }
 
+    // Converter dosageUnit de string para número se necessário
+    if (data.data?.items) {
+      data.data.items = data.data.items.map((medicine) => ({
+        ...medicine,
+        dosageUnit: convertDosageUnitFromBackend(medicine.dosageUnit),
+      }));
+    }
+
     return data;
   } catch (error) {
     return {
@@ -53,15 +64,20 @@ export async function getAllMedicines(
 
 export async function getMedicineById(
   id: string,
-  token: string
+  token: string,
+  memberId?: string | null
 ): Promise<BaseResponse<MedicineDtoResponse>> {
   try {
-    const response = await fetch(`${API_BASE_URL}/Medicine/${id}`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const memberIdParam = memberId ? `?memberId=${memberId}` : "";
+    const response = await fetch(
+      `${API_BASE_URL}/Medicine/${id}${memberIdParam}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
 
     const data = (await response.json()) as BaseResponse<MedicineDtoResponse>;
 
@@ -80,6 +96,14 @@ export async function getMedicineById(
       };
     }
 
+    // Converter dosageUnit de string para número se necessário
+    if (data.data) {
+      data.data = {
+        ...data.data,
+        dosageUnit: convertDosageUnitFromBackend(data.data.dosageUnit),
+      };
+    }
+
     return data;
   } catch (error) {
     return {
@@ -94,10 +118,12 @@ export async function getMedicineById(
 
 export async function createMedicine(
   request: CreateMedicineRequest,
-  token: string
+  token: string,
+  memberId?: string | null
 ): Promise<BaseResponse<MedicineDtoResponse>> {
   try {
-    const response = await fetch(`${API_BASE_URL}/Medicine`, {
+    const memberIdParam = memberId ? `?memberId=${memberId}` : "";
+    const response = await fetch(`${API_BASE_URL}/Medicine${memberIdParam}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -117,6 +143,14 @@ export async function createMedicine(
       };
     }
 
+    // Converter dosageUnit de string para número se necessário
+    if (data.data) {
+      data.data = {
+        ...data.data,
+        dosageUnit: convertDosageUnitFromBackend(data.data.dosageUnit),
+      };
+    }
+
     return data;
   } catch (error) {
     return {
@@ -132,17 +166,22 @@ export async function createMedicine(
 export async function updateMedicine(
   id: string,
   request: UpdateMedicineRequest,
-  token: string
+  token: string,
+  memberId?: string | null
 ): Promise<BaseResponse<MedicineDtoResponse>> {
   try {
-    const response = await fetch(`${API_BASE_URL}/Medicine/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(request),
-    });
+    const memberIdParam = memberId ? `?memberId=${memberId}` : "";
+    const response = await fetch(
+      `${API_BASE_URL}/Medicine/${id}${memberIdParam}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(request),
+      }
+    );
 
     const data = (await response.json()) as BaseResponse<MedicineDtoResponse>;
 
@@ -156,6 +195,14 @@ export async function updateMedicine(
       };
     }
 
+    // Converter dosageUnit de string para número se necessário
+    if (data.data) {
+      data.data = {
+        ...data.data,
+        dosageUnit: convertDosageUnitFromBackend(data.data.dosageUnit),
+      };
+    }
+
     return data;
   } catch (error) {
     return {
@@ -163,6 +210,47 @@ export async function updateMedicine(
       code: 0,
       message:
         error instanceof Error ? error.message : "Erro ao atualizar medicação",
+      data: undefined,
+    };
+  }
+}
+
+export async function softDeleteMedicine(
+  id: string,
+  token: string,
+  memberId?: string | null
+): Promise<BaseResponse<boolean>> {
+  try {
+    const memberIdParam = memberId ? `?memberId=${memberId}` : "";
+    const response = await fetch(
+      `${API_BASE_URL}/Medicine/${id}${memberIdParam}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const data = (await response.json()) as BaseResponse<boolean>;
+
+    if (!response.ok) {
+      return {
+        success: false,
+        code: response.status,
+        message:
+          data.message || `Erro ao deletar medicação (${response.status})`,
+        data: undefined,
+      };
+    }
+
+    return data;
+  } catch (error) {
+    return {
+      success: false,
+      code: 0,
+      message:
+        error instanceof Error ? error.message : "Erro ao deletar medicação",
       data: undefined,
     };
   }

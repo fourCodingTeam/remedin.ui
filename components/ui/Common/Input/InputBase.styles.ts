@@ -1,4 +1,5 @@
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { Pressable } from "react-native";
 import styled from "styled-components/native";
 import { theme } from "@/constants/theme";
 
@@ -44,4 +45,8 @@ export const InputPrefixIconWrapper = styled(FontAwesome)`
 `;
 export const InputSuffixIconWrapper = styled(FontAwesome)`
     margin-left: ${theme.sizes[2]};
+`;
+export const PasswordToggleWrapper = styled(Pressable)`
+    margin-left: ${theme.sizes[2]};
+    padding: ${theme.sizes[1]};
 `;

@@ -7,4 +7,3 @@ export type RegisterHealthInfoCardProps = {
   iconColor?: string;
   onPress?: () => void;
 };
-

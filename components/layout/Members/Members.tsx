@@ -1,16 +1,19 @@
 import { router } from "expo-router";
 import { UserPlus } from "lucide-react-native";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { signOut } from "@/auth/signOut";
 import { Button, Header, InputSelect, StyledText } from "@/components/ui";
 import { MemberCard } from "@/components/ui/MemberCard/MemberCard";
+import { useToast } from "@/components/ui/Toast";
 import {
   memberSideMenuConfig,
   sideMenuConfig,
 } from "@/constants/sideMenu.config";
+import { theme } from "@/constants/theme";
+import { getMembersByOwner } from "@/services/api/person";
 import { memberMock } from "@/services/mock/memberMock";
+import { getAuthToken } from "@/services/utils/getAuthToken";
 import { useMemberStore } from "@/stores/MemberStore";
-import type { MemberState } from "@/stores/MemberStore/@types";
 import { useUserStore } from "@/stores/UserStore";
 import { PageWrapper } from "../Common/PageWrapper";
 import { CalendarModal } from "../Modals/CalendarModal";
@@ -25,7 +28,7 @@ import type { MembersProps } from "./Members.types";
 
 export function Members({ isMemberApp = false }: MembersProps) {
   const [isNewMemberModalVisible, setIsNewMemberModalVisible] = useState(false);
-  const { username } = useUserStore();
+  const { username, phoneNumber } = useUserStore();
   const {
     setMember,
     member,
@@ -35,6 +38,15 @@ export function Members({ isMemberApp = false }: MembersProps) {
     setBloodSugar,
     setAmountOfMedicine,
   } = useMemberStore();
+  const { showToast } = useToast();
+  const [membersList, setMembersList] = useState<
+    Array<{
+      id: string;
+      name: string;
+      email: string;
+    }>
+  >([]);
+  const [isLoadingMembers, setIsLoadingMembers] = useState(false);
   const [isCalendarModalVisible, setIsCalendarModalVisible] = useState(false);
   const [isProfileModalVisible, setIsProfileModalVisible] = useState(false);
   const [isMedicinesModalVisible, setIsMedicinesModalVisible] = useState(false);
@@ -56,14 +68,69 @@ export function Members({ isMemberApp = false }: MembersProps) {
     { label: "Membros inativos", value: "inactive" },
   ];
 
-  const handleOpenMemberAppById = (member: MemberState["member"]) => {
-    setMember(member);
+  const loadMembers = useCallback(async () => {
+    setIsLoadingMembers(true);
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        return;
+      }
+
+      const response = await getMembersByOwner(token);
+      if (response.success && response.data) {
+        setMembersList(response.data);
+      } else {
+        showToast(response.message || "Erro ao carregar membros", "error");
+      }
+    } catch (error) {
+      showToast(
+        error instanceof Error ? error.message : "Erro ao carregar membros",
+        "error"
+      );
+    } finally {
+      setIsLoadingMembers(false);
+    }
+  }, [showToast]);
+
+  useEffect(() => {
+    if (!isMemberApp) {
+      loadMembers();
+    }
+  }, [isMemberApp, loadMembers]);
+
+  const handleOpenMemberAppById = (memberData: {
+    id: string;
+    name: string;
+    email: string;
+  }) => {
+    if (!memberData.id || memberData.id.trim() === "") {
+      showToast("ID do membro inválido", "error");
+      return;
+    }
+
+    // Converter GUID string para número simples usando hash (apenas para compatibilidade com MemberStore)
+    // O importante é que router.push usa o GUID correto
+    const numericId =
+      memberData.id
+        .split("")
+        .reduce((acc, char) => acc + char.charCodeAt(0), 0) % 1_000_000;
+
+    setMember({
+      id: numericId,
+      name: memberData.name,
+      phoneNumber: "",
+      avatar: "",
+    });
     setWeight(weight);
     setHeight(height);
     setBloodPressure(bloodPressure);
     setBloodSugar(bloodSugar);
     setAmountOfMedicine(amountOfMedicine);
-    router.push(`/member/${member.id}`);
+    router.push(`/member/${memberData.id}`);
+  };
+
+  const handleMemberCreated = () => {
+    loadMembers();
   };
 
   const handleLogOut = async () => {
@@ -139,13 +206,18 @@ export function Members({ isMemberApp = false }: MembersProps) {
           <Header
             description="Como está se sentindo hoje?"
             onBellPress={() => setIsNotificationsModalVisible(true)}
-            sideMenu={sideMenuConfig(username ?? "Usuário", handleLogOut, {
-              setIsCalendarModalVisible,
-              setIsProfileModalVisible,
-              setIsMedicinesModalVisible,
-              setIsReportsModalVisible,
-              setIsConfigurationsModalVisible,
-            })}
+            sideMenu={sideMenuConfig(
+              username ?? "Usuário",
+              phoneNumber ?? "",
+              handleLogOut,
+              {
+                setIsCalendarModalVisible,
+                setIsProfileModalVisible,
+                setIsMedicinesModalVisible,
+                setIsReportsModalVisible,
+                setIsConfigurationsModalVisible,
+              }
+            )}
             usuario={username ?? "Usuário"}
           >
             <Button
@@ -167,26 +239,45 @@ export function Members({ isMemberApp = false }: MembersProps) {
             placeholder="Filtrar por..."
             value={selectedFilter}
           />
-          <MemberCard
-            avatar={require("@/assets/images/adaptive-icon.png")}
-            id={1}
-            name="Reginaldo Santos"
-            onPress={() =>
-              handleOpenMemberAppById({
-                id: 1,
-                name: "Reginaldo Santos",
-                phoneNumber: "34996621768",
-                avatar: require("@/assets/images/adaptive-icon.png"),
-              })
-            }
-            phoneNumber="34996621768"
-          />
+          {membersList
+            .filter(
+              (memberData) => memberData.id && memberData.id.trim() !== ""
+            )
+            .map((memberData) => {
+              // Converter GUID string para número simples usando hash (apenas para compatibilidade com MemberCard)
+              const numericId = memberData.id
+                ? memberData.id
+                    .split("")
+                    .reduce((acc, char) => acc + char.charCodeAt(0), 0) %
+                  1_000_000
+                : 0;
+
+              return (
+                <MemberCard
+                  avatar={require("@/assets/images/adaptive-icon.png")}
+                  id={numericId}
+                  key={memberData.id}
+                  name={memberData.name || "Sem nome"}
+                  onPress={() => handleOpenMemberAppById(memberData)}
+                  phoneNumber=""
+                />
+              );
+            })}
+          {membersList.length === 0 && !isLoadingMembers && (
+            <StyledText
+              style={{ textAlign: "center", color: theme.colors.text.muted }}
+              variant="mediumRegular"
+            >
+              Nenhum membro cadastrado ainda.
+            </StyledText>
+          )}
         </ContentWrapper>
       </PageWrapper>
 
       <NewMemberFormModal
         isVisible={isNewMemberModalVisible}
         onClose={() => setIsNewMemberModalVisible(false)}
+        onMemberCreated={handleMemberCreated}
       />
       <CalendarModal
         isVisible={isCalendarModalVisible}

@@ -9,14 +9,19 @@ import {
   memberSideMenuConfig,
   sideMenuConfig,
 } from "@/constants/sideMenu.config";
-import { useMedicines } from "@/hooks/useMedicines";
+import { useMedicines, useMemberContext } from "@/hooks";
+import { useDoseOccurrencesForDate } from "@/hooks/useDoseOccurrencesForDate";
 import { useMemberStore } from "@/stores/MemberStore";
 import { useUserStore } from "@/stores/UserStore";
 import { getDateFromKey, getDateKey } from "@/utils/date/dateKey";
-import { mapMedicinesToCardsForDate } from "@/utils/medicine/medicineCardMapper";
+import {
+  enrichCardsWithDoseStatus,
+  mapMedicinesToCardsForDate,
+} from "@/utils/medicine/medicineCardMapper";
 import { PageWrapper } from "../Common/PageWrapper";
 import { CalendarModal } from "../Modals/CalendarModal/CalendarModal";
 import { ConfigurationsModal } from "../Modals/ConfigurationsModal";
+import { MedicineAdherenceModal } from "../Modals/MedicineAdherenceModal/MedicineAdherenceModal";
 import { MedicineFormModal } from "../Modals/MedicineFormModal";
 import { MedicinesModal } from "../Modals/MedicinesModal";
 import { NotificationsModal } from "../Modals/NotificationsModal";
@@ -29,13 +34,21 @@ export default function Home({ isMemberApp = false }: HomeProps) {
   const { username, signOut, phoneNumber } = useUserStore();
   const { member } = useMemberStore();
   const { showToast } = useToast();
-  const { medicines, isLoading, reloadMedicines } = useMedicines();
+  const { memberId } = useMemberContext();
+  const { medicines, isLoading, reloadMedicines } = useMedicines(memberId);
   const getTodayDate = () => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), now.getDate());
   };
 
   const [selectedDate, setSelectedDate] = useState(() => getTodayDate());
+
+  // Fetch dose occurrences for selected date
+  const {
+    doseOccurrences,
+    isLoading: isLoadingDoses,
+    reload: reloadDoses,
+  } = useDoseOccurrencesForDate(selectedDate, memberId);
   const [selectedFilter, setSelectedFilter] = useState<
     string | number | undefined
   >();
@@ -49,6 +62,17 @@ export default function Home({ isMemberApp = false }: HomeProps) {
     useState(false);
   const [isNotificationsModalVisible, setIsNotificationsModalVisible] =
     useState(false);
+  const [isMedicineAdherenceModalVisible, setIsMedicineAdherenceModalVisible] =
+    useState(false);
+  const [selectedMedicineId, setSelectedMedicineId] = useState<string | null>(
+    null
+  );
+  const [selectedScheduleId, setSelectedScheduleId] = useState<string | null>(
+    null
+  );
+  const [selectedDateForModal, setSelectedDateForModal] = useState<Date | null>(
+    null
+  );
   const filterOptions = [
     { label: "Todas as medicações", value: "all" },
     { label: "Medicações agendadas", value: "scheduled" },
@@ -68,14 +92,35 @@ export default function Home({ isMemberApp = false }: HomeProps) {
     [selectedDateKey]
   );
 
-  const medicinesForSelectedDate = useMemo(
-    () =>
-      mapMedicinesToCardsForDate(medicines, selectedDateObj, selectedDateKey),
-    [medicines, selectedDateObj, selectedDateKey]
-  );
+  const medicinesForSelectedDate = useMemo(() => {
+    const cards = mapMedicinesToCardsForDate(
+      medicines,
+      selectedDateObj,
+      selectedDateKey
+    );
+
+    // Enrich cards with dose occurrence status
+    const enrichedCards = enrichCardsWithDoseStatus(cards, doseOccurrences);
+
+    // Filter out any invalid cards that might have lost their structure
+    return enrichedCards.filter((card) => {
+      const isValid =
+        card &&
+        card.card &&
+        card.card.value &&
+        typeof card.card.value === "string";
+      if (!isValid) {
+        console.warn(
+          "[Home] Filtered out invalid card after enrichment:",
+          card
+        );
+      }
+      return isValid;
+    });
+  }, [medicines, selectedDateObj, selectedDateKey, doseOccurrences]);
 
   const renderMedicinesList = () => {
-    if (isLoading) {
+    if (isLoading || isLoadingDoses) {
       return (
         <StyledText
           color="muted"
@@ -99,13 +144,74 @@ export default function Home({ isMemberApp = false }: HomeProps) {
       );
     }
 
-    return medicinesForSelectedDate.map(({ id, card }) => (
-      <MedicineCheckboxCard
-        key={id}
-        {...card}
-        style={{ marginTop: 4, marginBottom: 4 }}
-      />
-    ));
+    return medicinesForSelectedDate
+      .map((item, index) => {
+        // Validate item structure
+        if (!(item && item.card && item.id)) {
+          console.warn(
+            `[Home] Invalid item structure at index ${index}:`,
+            item
+          );
+          return null;
+        }
+
+        const { id, card, date: cardDateKey } = item;
+
+        // Skip if card.value is missing or invalid
+        if (!(card && card.value) || typeof card.value !== "string") {
+          console.warn(
+            `[Home] Missing or invalid card.value at index ${index}:`,
+            {
+              cardValue: card?.value,
+              cardStructure: card,
+              itemId: id,
+            }
+          );
+          return null;
+        }
+
+        // Use "|" as separator to avoid conflicts with GUID format
+        const separator = "|";
+        let parts: string[];
+
+        try {
+          parts = card.value.split(separator);
+        } catch (error) {
+          console.warn("Error splitting card.value:", card.value, error);
+          return null;
+        }
+
+        if (parts.length !== 2) {
+          // Skip invalid cards (wrong format)
+          return null;
+        }
+
+        const [medicineId, scheduleId] = parts;
+
+        // Convert dateKey to Date object for the modal
+        let cardDate: Date;
+        try {
+          cardDate = getDateFromKey(cardDateKey);
+        } catch {
+          // Fallback to current date if conversion fails
+          cardDate = getTodayDate();
+        }
+
+        return (
+          <MedicineCheckboxCard
+            key={id}
+            {...card}
+            onPress={() => {
+              setSelectedMedicineId(medicineId);
+              setSelectedScheduleId(scheduleId);
+              setSelectedDateForModal(cardDate);
+              setIsMedicineAdherenceModalVisible(true);
+            }}
+            style={{ marginTop: 4, marginBottom: 4 }}
+          />
+        );
+      })
+      .filter(Boolean);
   };
 
   const handleLogOut = async () => {
@@ -190,6 +296,20 @@ export default function Home({ isMemberApp = false }: HomeProps) {
           isVisible={isNotificationsModalVisible}
           onClose={() => setIsNotificationsModalVisible(false)}
         />
+        {selectedMedicineId && selectedScheduleId && selectedDateForModal && (
+          <MedicineAdherenceModal
+            date={selectedDateForModal}
+            isVisible={isMedicineAdherenceModalVisible}
+            medicineId={selectedMedicineId}
+            onClose={() => {
+              setIsMedicineAdherenceModalVisible(false);
+              setSelectedDateForModal(null);
+              reloadMedicines();
+              reloadDoses();
+            }}
+            scheduleId={selectedScheduleId}
+          />
+        )}
       </PageWrapper>
     );
   }
@@ -274,6 +394,20 @@ export default function Home({ isMemberApp = false }: HomeProps) {
         isVisible={isNotificationsModalVisible}
         onClose={() => setIsNotificationsModalVisible(false)}
       />
+      {selectedMedicineId && selectedScheduleId && selectedDateForModal && (
+        <MedicineAdherenceModal
+          date={selectedDateForModal}
+          isVisible={isMedicineAdherenceModalVisible}
+          medicineId={selectedMedicineId}
+          onClose={() => {
+            setIsMedicineAdherenceModalVisible(false);
+            setSelectedDateForModal(null);
+            reloadMedicines();
+            reloadDoses();
+          }}
+          scheduleId={selectedScheduleId}
+        />
+      )}
     </PageWrapper>
   );
 }

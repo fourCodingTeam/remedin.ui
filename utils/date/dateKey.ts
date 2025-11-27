@@ -14,9 +14,35 @@ export function getDateKey(date: Date): string {
  * Uses local time components to avoid timezone shifts
  */
 export function getDateFromKey(dateKey: string): Date {
-  const [year, month, day] = dateKey.split("-").map(Number.parseInt);
+  if (!dateKey || typeof dateKey !== "string") {
+    throw new Error(`Invalid dateKey: ${dateKey}`);
+  }
+  
+  const parts = dateKey.split("-");
+  if (parts.length !== 3) {
+    throw new Error(`Invalid dateKey format: ${dateKey}. Expected YYYY-MM-DD`);
+  }
+  
+  const year = Number.parseInt(parts[0], 10);
+  const month = Number.parseInt(parts[1], 10);
+  const day = Number.parseInt(parts[2], 10);
+  
+  if (Number.isNaN(year) || Number.isNaN(month) || Number.isNaN(day)) {
+    throw new Error(`Invalid dateKey: ${dateKey}. Could not parse numbers`);
+  }
+  
   // Create date using local time (month is 0-indexed in Date constructor)
   const date = new Date(year, month - 1, day);
+  
+  // Validate that the date is valid
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    throw new Error(`Invalid dateKey: ${dateKey}. Date values out of range`);
+  }
+  
   date.setHours(0, 0, 0, 0);
   return date;
 }

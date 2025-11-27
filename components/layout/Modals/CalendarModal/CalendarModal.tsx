@@ -6,10 +6,15 @@ import {
   StyledText,
 } from "@/components/ui/Common";
 import { Calendar } from "@/components/ui/Common/Calendar";
+import { useDoseOccurrencesForDate } from "@/hooks/useDoseOccurrencesForDate";
+import { useMemberContext } from "@/hooks/useMemberContext";
 import { useMedicines } from "@/hooks/useMedicines";
 import { getDateFromKey, getDateKey } from "@/utils/date/dateKey";
 import { groupMedicinesByHour } from "@/utils/medicine/groupMedicinesByHour";
-import { mapMedicinesToCardsForDate } from "@/utils/medicine/medicineCardMapper";
+import {
+  enrichCardsWithDoseStatus,
+  mapMedicinesToCardsForDate,
+} from "@/utils/medicine/medicineCardMapper";
 import { ModalPageWrapper } from "../../Common/ModalPageWrapper";
 import { ButtonsWrapper } from "../../styles";
 import {
@@ -24,13 +29,18 @@ function normalizeDate(date: Date): Date {
 }
 
 export function CalendarModal({ isVisible, onClose }: CalendarModalProps) {
+  const { memberId } = useMemberContext();
   const [selectedDate, setSelectedDate] = useState<Date>(() =>
     normalizeDate(new Date())
   );
   const [currentDate, setCurrentDate] = useState<Date>(() =>
     normalizeDate(new Date())
   );
-  const { medicines, isLoading, reloadMedicines } = useMedicines();
+  const { medicines, isLoading, reloadMedicines } = useMedicines(memberId);
+  
+  // Fetch dose occurrences for selected date
+  const { doseOccurrences, isLoading: isLoadingDoses } =
+    useDoseOccurrencesForDate(selectedDate, memberId);
 
   useEffect(() => {
     if (isVisible) {
@@ -54,11 +64,16 @@ export function CalendarModal({ isVisible, onClose }: CalendarModalProps) {
     [selectedDateKey]
   );
 
-  const medicinesForSelectedDate = useMemo(
-    () =>
-      mapMedicinesToCardsForDate(medicines, selectedDateObj, selectedDateKey),
-    [medicines, selectedDateObj, selectedDateKey]
-  );
+  const medicinesForSelectedDate = useMemo(() => {
+    const cards = mapMedicinesToCardsForDate(
+      medicines,
+      selectedDateObj,
+      selectedDateKey
+    );
+    
+    // Enrich cards with dose occurrence status
+    return enrichCardsWithDoseStatus(cards, doseOccurrences);
+  }, [medicines, selectedDateObj, selectedDateKey, doseOccurrences]);
 
   const medicinesByHour = useMemo(
     () => groupMedicinesByHour(medicinesForSelectedDate),
@@ -66,7 +81,7 @@ export function CalendarModal({ isVisible, onClose }: CalendarModalProps) {
   );
 
   const renderMedicinesTimeline = () => {
-    if (isLoading) {
+    if (isLoading || isLoadingDoses) {
       return (
         <StyledText
           color="muted"

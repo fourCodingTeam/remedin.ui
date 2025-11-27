@@ -3,4 +3,3 @@ export type MedicineEditConfirmModalProps = {
   onClose: () => void;
   onConfirm: () => void;
 };
-

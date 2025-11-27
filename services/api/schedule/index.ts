@@ -5,15 +5,21 @@ import type {
   ScheduleDtoResponse,
   UpdateScheduleRequest,
 } from "@/services/@types/schedule";
+import {
+  convertMedicineScheduleTypeFromBackend,
+  convertWeekDayFromBackend,
+} from "@/utils/medicine/dosageUnitConverter";
 
 export async function getAllSchedules(
   token: string,
   page: number,
-  pageSize: number
+  pageSize: number,
+  memberId?: string | null
 ): Promise<BaseResponse<PagedResult<ScheduleDtoResponse>>> {
   try {
+    const memberIdParam = memberId ? `&memberId=${memberId}` : "";
     const response = await fetch(
-      `${API_BASE_URL}/Schedule?page=${page}&pageSize=${pageSize}`,
+      `${API_BASE_URL}/Schedule?page=${page}&pageSize=${pageSize}${memberIdParam}`,
       {
         method: "GET",
         headers: {
@@ -39,6 +45,19 @@ export async function getAllSchedules(
       };
     }
 
+    // Converter enums de string para número se necessário
+    if (data.data?.items) {
+      data.data.items = data.data.items.map((schedule) => ({
+        ...schedule,
+        scheduleType: convertMedicineScheduleTypeFromBackend(
+          schedule.scheduleType
+        ),
+        weekDays: schedule.weekDays
+          ? schedule.weekDays.map((day) => convertWeekDayFromBackend(day))
+          : null,
+      }));
+    }
+
     return data;
   } catch (error) {
     return {
@@ -53,15 +72,20 @@ export async function getAllSchedules(
 
 export async function getScheduleById(
   id: string,
-  token: string
+  token: string,
+  memberId?: string | null
 ): Promise<BaseResponse<ScheduleDtoResponse>> {
   try {
-    const response = await fetch(`${API_BASE_URL}/Schedule/${id}`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const memberIdParam = memberId ? `?memberId=${memberId}` : "";
+    const response = await fetch(
+      `${API_BASE_URL}/Schedule/${id}${memberIdParam}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
 
     const data = (await response.json()) as BaseResponse<ScheduleDtoResponse>;
 
@@ -79,6 +103,19 @@ export async function getScheduleById(
       };
     }
 
+    // Converter enums de string para número se necessário
+    if (data.data) {
+      data.data = {
+        ...data.data,
+        scheduleType: convertMedicineScheduleTypeFromBackend(
+          data.data.scheduleType
+        ),
+        weekDays: data.data.weekDays
+          ? data.data.weekDays.map((day) => convertWeekDayFromBackend(day))
+          : null,
+      };
+    }
+
     return data;
   } catch (error) {
     return {
@@ -93,10 +130,12 @@ export async function getScheduleById(
 
 export async function createSchedule(
   request: CreateScheduleRequest,
-  token: string
+  token: string,
+  memberId?: string | null
 ): Promise<BaseResponse<ScheduleDtoResponse>> {
   try {
-    const response = await fetch(`${API_BASE_URL}/Schedule`, {
+    const memberIdParam = memberId ? `?memberId=${memberId}` : "";
+    const response = await fetch(`${API_BASE_URL}/Schedule${memberIdParam}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -118,6 +157,19 @@ export async function createSchedule(
       };
     }
 
+    // Converter enums de string para número se necessário
+    if (data.data) {
+      data.data = {
+        ...data.data,
+        scheduleType: convertMedicineScheduleTypeFromBackend(
+          data.data.scheduleType
+        ),
+        weekDays: data.data.weekDays
+          ? data.data.weekDays.map((day) => convertWeekDayFromBackend(day))
+          : null,
+      };
+    }
+
     return data;
   } catch (error) {
     return {
@@ -133,17 +185,22 @@ export async function createSchedule(
 export async function updateSchedule(
   id: string,
   request: UpdateScheduleRequest,
-  token: string
+  token: string,
+  memberId?: string | null
 ): Promise<BaseResponse<ScheduleDtoResponse>> {
   try {
-    const response = await fetch(`${API_BASE_URL}/Schedule/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(request),
-    });
+    const memberIdParam = memberId ? `?memberId=${memberId}` : "";
+    const response = await fetch(
+      `${API_BASE_URL}/Schedule/${id}${memberIdParam}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(request),
+      }
+    );
 
     const data = (await response.json()) as BaseResponse<ScheduleDtoResponse>;
 
@@ -155,6 +212,19 @@ export async function updateSchedule(
         message:
           data.message || `Erro ao atualizar agendamento (${response.status})`,
         data: undefined,
+      };
+    }
+
+    // Converter enums de string para número se necessário
+    if (data.data) {
+      data.data = {
+        ...data.data,
+        scheduleType: convertMedicineScheduleTypeFromBackend(
+          data.data.scheduleType
+        ),
+        weekDays: data.data.weekDays
+          ? data.data.weekDays.map((day) => convertWeekDayFromBackend(day))
+          : null,
       };
     }
 

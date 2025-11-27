@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { signOut } from "@/auth/signOut";
 import { HealthInfoCard } from "@/components/ui";
 import { Header, RegisterHealthInfoCard } from "@/components/ui/Common";
@@ -8,6 +8,8 @@ import {
   sideMenuConfig,
 } from "@/constants/sideMenu.config";
 import { theme } from "@/constants/theme";
+import { useHealthData, useMemberContext } from "@/hooks";
+import { getAllMedicines } from "@/services/api/medicine";
 import { useMemberStore } from "@/stores/MemberStore";
 import { useUserStore } from "@/stores/UserStore";
 import { PageWrapper } from "../Common/PageWrapper";
@@ -44,16 +46,38 @@ type HealthModalKey =
   | "medicines";
 
 export function Health({ isMemberApp = false }: HealthProps) {
+  const { member, weight, height } = useMemberStore();
+  const { username, phoneNumber, token, weightKg, heightCm } = useUserStore();
+  const { memberId, isMemberContext } = useMemberContext();
   const {
-    weight,
-    height,
-    bloodPressure,
-    bloodSugar,
-    amountOfMedicine,
-    member,
-  } = useMemberStore();
+    latestWeight,
+    latestHeight,
+    latestBloodPressure,
+    latestBloodSugar,
+    reload: reloadHealth,
+  } = useHealthData();
 
-  const { username } = useUserStore();
+  // Use latestHeight from API, fallback to member or user store based on context
+  const displayHeight =
+    latestHeight !== null
+      ? latestHeight
+      : isMemberContext
+        ? height > 0
+          ? height
+          : null
+        : heightCm;
+
+  // Use latestWeight from API, fallback to member or user store based on context
+  const displayWeight =
+    latestWeight !== null
+      ? latestWeight
+      : isMemberContext
+        ? weight > 0
+          ? weight
+          : null
+        : weightKg;
+  const [medicinesCount, setMedicinesCount] = useState(0);
+  const [isLoadingMedicines, setIsLoadingMedicines] = useState(false);
   const [activeModal, setActiveModal] = useState<HealthModalKey | null>(null);
   const [isCalendarModalVisible, setIsCalendarModalVisible] = useState(false);
   const [isProfileModalVisible, setIsProfileModalVisible] = useState(false);
@@ -63,6 +87,34 @@ export function Health({ isMemberApp = false }: HealthProps) {
     useState(false);
   const [isNotificationsModalVisible, setIsNotificationsModalVisible] =
     useState(false);
+
+  const loadMedicinesCount = useCallback(async () => {
+    if (!token) {
+      return;
+    }
+
+    setIsLoadingMedicines(true);
+    try {
+      const response = await getAllMedicines(
+        token,
+        1,
+        1,
+        memberId || undefined
+      );
+      if (response.success && response.data) {
+        setMedicinesCount(response.data.totalCount || 0);
+      }
+    } catch {
+      // Silently fail - will show default value
+    } finally {
+      setIsLoadingMedicines(false);
+    }
+  }, [token, memberId]);
+
+  useEffect(() => {
+    loadMedicinesCount();
+  }, [loadMedicinesCount]);
+
   const openModal = (modal: HealthModalKey) => {
     setActiveModal(modal);
   };
@@ -72,6 +124,8 @@ export function Health({ isMemberApp = false }: HealthProps) {
     if (typeof maybeCallback === "function") {
       maybeCallback();
     }
+    // Reload health data when modal closes to update displayed values
+    reloadHealth();
   };
 
   const registerCardConfigs: Array<{
@@ -117,20 +171,6 @@ export function Health({ isMemberApp = false }: HealthProps) {
       borderColor: theme.colors.accent.primary,
       iconColor: theme.colors.accent.primary,
     },
-    {
-      key: "weight",
-      title: "Registrar Peso",
-      backgroundColor: theme.colors.background.light,
-      borderColor: theme.colors.accent.secondary,
-      iconColor: theme.colors.accent.secondary,
-    },
-    {
-      key: "height",
-      title: "Registrar Altura",
-      backgroundColor: theme.colors.background.light,
-      borderColor: theme.colors.accent.secondary,
-      iconColor: theme.colors.accent.secondary,
-    },
   ];
 
   const modals = (
@@ -161,7 +201,10 @@ export function Health({ isMemberApp = false }: HealthProps) {
       />
       <MedicineFormModal
         isVisible={activeModal === "medicines"}
-        onClose={() => closeModal()}
+        onClose={() => {
+          closeModal();
+          loadMedicinesCount();
+        }}
       />
       <CalendarModal
         isVisible={isCalendarModalVisible}
@@ -203,7 +246,7 @@ export function Health({ isMemberApp = false }: HealthProps) {
                 title="Peso"
                 type="weight"
                 unit="kg"
-                value={weight.toString()}
+                value={displayWeight !== null ? displayWeight.toString() : "-"}
               />
               <HealthInfoCard
                 backgroundColor="primary"
@@ -213,7 +256,7 @@ export function Health({ isMemberApp = false }: HealthProps) {
                 title="Altura"
                 type="weight"
                 unit="cm"
-                value={height.toString()}
+                value={displayHeight !== null ? displayHeight.toString() : "-"}
                 valueTextColor="dark"
               />
               <HealthInfoCard
@@ -221,7 +264,7 @@ export function Health({ isMemberApp = false }: HealthProps) {
                 color="dark"
                 title="Remédios"
                 type="amountOfMedicine"
-                value={amountOfMedicine.toString()}
+                value={isLoadingMedicines ? "..." : medicinesCount.toString()}
               />
             </ThreeCardsWrapper>
             <TwoCardsWrapper>
@@ -231,7 +274,7 @@ export function Health({ isMemberApp = false }: HealthProps) {
                 title="Pressão Arterial"
                 type="bloodPressure"
                 unit="mmHg"
-                value={bloodPressure.toString()}
+                value={latestBloodPressure || "-"}
               />
               <HealthInfoCard
                 backgroundColor="light"
@@ -239,7 +282,9 @@ export function Health({ isMemberApp = false }: HealthProps) {
                 title="Glicose"
                 type="bloodSugar"
                 unit="mg/dL"
-                value={bloodSugar.toString()}
+                value={
+                  latestBloodSugar !== null ? latestBloodSugar.toString() : "-"
+                }
               />
             </TwoCardsWrapper>
             <RegisterCardsWrapper>
@@ -285,13 +330,18 @@ export function Health({ isMemberApp = false }: HealthProps) {
           <Header
             description="Como vai a saúde?"
             onBellPress={() => setIsNotificationsModalVisible(true)}
-            sideMenu={sideMenuConfig(username ?? "Usuário", handleLogOut, {
-              setIsCalendarModalVisible,
-              setIsProfileModalVisible,
-              setIsMedicinesModalVisible,
-              setIsReportsModalVisible,
-              setIsConfigurationsModalVisible,
-            })}
+            sideMenu={sideMenuConfig(
+              username ?? "Usuário",
+              phoneNumber ?? "",
+              handleLogOut,
+              {
+                setIsCalendarModalVisible,
+                setIsProfileModalVisible,
+                setIsMedicinesModalVisible,
+                setIsReportsModalVisible,
+                setIsConfigurationsModalVisible,
+              }
+            )}
             usuario={username ?? "Usuário"}
           >
             <CardsWrapper>
@@ -302,7 +352,9 @@ export function Health({ isMemberApp = false }: HealthProps) {
                   title="Peso"
                   type="weight"
                   unit="kg"
-                  value="80"
+                  value={
+                    displayWeight !== null ? displayWeight.toString() : "-"
+                  }
                 />
                 <HealthInfoCard
                   backgroundColor="primary"
@@ -312,7 +364,9 @@ export function Health({ isMemberApp = false }: HealthProps) {
                   title="Altura"
                   type="weight"
                   unit="cm"
-                  value="180"
+                  value={
+                    displayHeight !== null ? displayHeight.toString() : "-"
+                  }
                   valueTextColor="dark"
                 />
                 <HealthInfoCard
@@ -320,7 +374,7 @@ export function Health({ isMemberApp = false }: HealthProps) {
                   color="dark"
                   title="Remédios"
                   type="amountOfMedicine"
-                  value="5"
+                  value={isLoadingMedicines ? "..." : medicinesCount.toString()}
                 />
               </ThreeCardsWrapper>
               <TwoCardsWrapper>
@@ -330,7 +384,7 @@ export function Health({ isMemberApp = false }: HealthProps) {
                   title="Pressão Arterial"
                   type="bloodPressure"
                   unit="mmHg"
-                  value="120/80"
+                  value={latestBloodPressure || "-"}
                 />
                 <HealthInfoCard
                   backgroundColor="light"
@@ -338,7 +392,11 @@ export function Health({ isMemberApp = false }: HealthProps) {
                   title="Glicose"
                   type="bloodSugar"
                   unit="mg/dL"
-                  value="100"
+                  value={
+                    latestBloodSugar !== null
+                      ? latestBloodSugar.toString()
+                      : "-"
+                  }
                 />
               </TwoCardsWrapper>
             </CardsWrapper>

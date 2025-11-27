@@ -9,4 +9,3 @@ export const frequencyTypeLabels: Record<FrequencyType, string> = {
   [FrequencyType.Weekly]: "Semanal",
   [FrequencyType.Monthly]: "Mensal",
 };
-

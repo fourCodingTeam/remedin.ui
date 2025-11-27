@@ -1,9 +1,13 @@
 import { Bell, Clock, MailCheck } from "lucide-react-native";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Modal from "react-native-modal";
 import { StyledText } from "@/components/ui";
 import { theme } from "@/constants/theme";
-import { notificationsMock } from "@/services/mock/notifications";
+import type {
+  MedicationReminderNotification,
+  MedicationTakenNotification,
+} from "@/services/websocket/websocketService";
+import { websocketService } from "@/services/websocket/websocketService";
 import {
   FloatingModalContent,
   ModalHeader,
@@ -17,11 +21,82 @@ import {
 } from "./NotificationsModal.styles";
 import type { NotificationsModalProps } from "./NotificationsModal.types";
 
+export type NotificationData = {
+  id: string;
+  title: string;
+  message: string;
+  timestamp: Date;
+  isRead: boolean;
+  type: "medication_reminder" | "medication_taken";
+  data?: MedicationReminderNotification | MedicationTakenNotification;
+};
+
+function formatTimestamp(date: Date): string {
+  const now = new Date();
+  const diffInMs = now.getTime() - date.getTime();
+  const diffInMinutes = Math.floor(diffInMs / 60_000);
+  const diffInHours = Math.floor(diffInMs / 3_600_000);
+  const diffInDays = Math.floor(diffInMs / 86_400_000);
+
+  if (diffInMinutes < 1) {
+    return "Agora";
+  }
+  if (diffInMinutes < 60) {
+    return `Há ${diffInMinutes} minuto${diffInMinutes > 1 ? "s" : ""}`;
+  }
+  if (diffInHours < 24) {
+    return `Há ${diffInHours} hora${diffInHours > 1 ? "s" : ""}`;
+  }
+  if (diffInDays < 7) {
+    return `Há ${diffInDays} dia${diffInDays > 1 ? "s" : ""}`;
+  }
+  return date.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
 export function NotificationsModal({
   isVisible,
   onClose,
 }: NotificationsModalProps) {
-  const [notifications, setNotifications] = useState(notificationsMock);
+  const [notifications, setNotifications] = useState<NotificationData[]>([]);
+  const unsubscribeRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    // Listen for notifications from websocket
+    const unsubscribe = websocketService.onNotification((notification) => {
+      const newNotification: NotificationData = {
+        id:
+          "doseOccurrenceId" in notification
+            ? notification.doseOccurrenceId
+            : `taken-${Date.now()}`,
+        title:
+          "doseOccurrenceId" in notification
+            ? "Hora de tomar medicação"
+            : "Medicamento registrado",
+        message: notification.message,
+        timestamp: new Date(),
+        isRead: false,
+        type:
+          "doseOccurrenceId" in notification
+            ? "medication_reminder"
+            : "medication_taken",
+        data: notification,
+      };
+
+      setNotifications((prev) => [newNotification, ...prev]);
+    });
+
+    unsubscribeRef.current = unsubscribe;
+
+    return () => {
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+      }
+    };
+  }, []);
 
   const handleMarkAllAsRead = () => {
     setNotifications((prev) =>
@@ -85,7 +160,7 @@ export function NotificationsModal({
                 </StyledText>
                 <NotificationTime>
                   <StyledText color="muted" variant="smallRegular">
-                    {notification.timestamp}
+                    {formatTimestamp(notification.timestamp)}
                   </StyledText>
                 </NotificationTime>
               </NotificationTitle>

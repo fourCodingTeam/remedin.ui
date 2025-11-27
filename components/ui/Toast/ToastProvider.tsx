@@ -13,35 +13,36 @@ type ToastContextType = {
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 export function ToastProvider({ children }: { children: ReactNode }) {
-  const [toasts, setToasts] = useState<ToastData[]>([]);
+  const [toast, setToast] = useState<ToastData | null>(null);
 
   const showToast = useCallback(
     (message: string, type: ToastType = "success", duration?: number) => {
       toastIdCounter += 1;
       const id = `toast-${toastIdCounter}`;
       const newToast: ToastData = { id, message, type, duration };
-      setToasts((prev) => [...prev, newToast]);
+      // Replace existing toast instead of adding to array
+      setToast(newToast);
     },
     []
   );
 
-  const hideToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  const hideToast = useCallback(() => {
+    setToast(null);
   }, []);
 
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
       <ToastProviderContainer>
-        {toasts.map((toast, index) => (
+        {toast && (
           <Toast
-            index={index}
+            index={0}
             key={toast.id}
-            totalToasts={toasts.length}
+            totalToasts={1}
             {...toast}
-            onClose={() => hideToast(toast.id)}
+            onClose={hideToast}
           />
-        ))}
+        )}
       </ToastProviderContainer>
     </ToastContext.Provider>
   );

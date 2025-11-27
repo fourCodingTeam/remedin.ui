@@ -3,7 +3,7 @@ export * from "./Button";
 export * from "./Calendar";
 export * from "./CheckboxCard";
 export * from "./Header";
-export * from "./SideMenuModal";
 export * from "./RegisterHealthInfoCard";
+export * from "./SideMenuModal";
 export * from "./Stepper";
 export * from "./StyledText";

@@ -31,7 +31,7 @@ function mapSchedulesToMedicines(
   }));
 }
 
-export function useMedicines() {
+export function useMedicines(memberId?: string | null) {
   const [medicines, setMedicines] = useState<MedicineWithSchedules[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { showToast } = useToast();
@@ -46,8 +46,8 @@ export function useMedicines() {
       }
 
       const [medicinesResponse, schedulesResponse] = await Promise.all([
-        getAllMedicines(token, 1, 100),
-        getAllSchedules(token, 1, 1000),
+        getAllMedicines(token, 1, 100, memberId || undefined),
+        getAllSchedules(token, 1, 1000, memberId || undefined),
       ]);
 
       const hasError = !medicinesResponse.success;
@@ -77,7 +77,7 @@ export function useMedicines() {
     } finally {
       setIsLoading(false);
     }
-  }, [showToast]);
+  }, [showToast, memberId]);
 
   useEffect(() => {
     loadMedicines();

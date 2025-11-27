@@ -12,22 +12,24 @@ import {
 } from "@/components/ui";
 import { ModalBase } from "@/components/ui/ModalBase/ModalBase";
 import { useToast } from "@/components/ui/Toast";
+import { useMemberContext } from "@/hooks";
 import {
   DosageUnit,
-  FrequencyType,
-  WeekDay,
+  MedicineScheduleType,
+  type WeekDay,
   weekDayLabels,
 } from "@/services/@types/enums";
+import type { ScheduleDtoResponse } from "@/services/@types/schedule";
 import { updateMedicine } from "@/services/api/medicine";
 import { updateSchedule } from "@/services/api/schedule";
 import { getAuthToken } from "@/services/utils/getAuthToken";
-import { dateToTimeOnly, timeOnlyToDate } from "@/utils/DateFormatters";
 import {
   dateOnlyToDate,
   dateToDateOnly,
 } from "@/utils/DateFormatters/dateOnly";
+import { dateToTimeOnly } from "@/utils/DateFormatters/timeOnly";
 import { getDosageUnitOptions } from "@/utils/medicine/dosageUnitMapper";
-import { getFrequencyTypeOptions } from "@/utils/schedule/frequencyTypeMapper";
+import { getMedicineScheduleTypeOptions } from "@/utils/schedule/medicineScheduleTypeMapper";
 import {
   type MedicineWithScheduleUpdateFormData,
   medicineWithScheduleUpdateSchema,
@@ -52,6 +54,7 @@ export function MedicineEditModal({
   const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(false);
   const [scheduleId, setScheduleId] = useState<string | null>(null);
   const { showToast } = useToast();
+  const { memberId } = useMemberContext();
 
   const {
     control,
@@ -60,6 +63,7 @@ export function MedicineEditModal({
     watch,
     formState: { errors, isSubmitting },
   } = useForm<MedicineWithScheduleUpdateFormData>({
+    // @ts-expect-error - zodResolver type inference issue with default values
     resolver: zodResolver(medicineWithScheduleUpdateSchema),
     defaultValues: {
       id: "",
@@ -69,26 +73,22 @@ export function MedicineEditModal({
       startDate: undefined,
       endDate: undefined,
       observations: "",
-      scheduledTime: undefined,
-      frequencyType: FrequencyType.Daily,
-      weekDays: [],
+      scheduleType: MedicineScheduleType.OncePerDay,
+      timeOfDay: null,
+      timesOfDay: null,
+      intervalInHours: null,
+      firstDoseAt: null,
+      weekDays: null,
       preAlarmMinutes: 15,
       posAlarmMinutes: 15,
     },
     mode: "onChange",
   });
 
-  const frequencyType = watch("frequencyType");
+  const scheduleType = watch("scheduleType");
 
   const resetFormWithSchedule = useCallback(
-    (schedule: {
-      id: string;
-      scheduledTime: string;
-      frequencyType: FrequencyType;
-      weekDays: WeekDay[];
-      preAlarmMinutes: number;
-      posAlarmMinutes: number;
-    }) => {
+    (schedule: ScheduleDtoResponse) => {
       if (!medicine) {
         return;
       }
@@ -104,11 +104,14 @@ export function MedicineEditModal({
       setScheduleId(schedule.id);
       reset({
         ...baseFormData,
-        scheduledTime: timeOnlyToDate(schedule.scheduledTime) || undefined,
-        frequencyType: schedule.frequencyType,
-        weekDays: schedule.weekDays || [],
-        preAlarmMinutes: schedule.preAlarmMinutes,
-        posAlarmMinutes: schedule.posAlarmMinutes,
+        scheduleType: schedule.scheduleType,
+        timeOfDay: schedule.timeOfDay || null,
+        timesOfDay: schedule.timesOfDay || null,
+        intervalInHours: schedule.intervalInHours || null,
+        firstDoseAt: schedule.firstDoseAt || null,
+        weekDays: schedule.weekDays || null,
+        preAlarmMinutes: schedule.preAlarmMinutes || 15,
+        posAlarmMinutes: schedule.posAlarmMinutes || 15,
       });
     },
     [medicine, reset]
@@ -129,9 +132,12 @@ export function MedicineEditModal({
     };
     reset({
       ...baseFormData,
-      scheduledTime: undefined,
-      frequencyType: FrequencyType.Daily,
-      weekDays: [],
+      scheduleType: MedicineScheduleType.OncePerDay,
+      timeOfDay: null,
+      timesOfDay: null,
+      intervalInHours: null,
+      firstDoseAt: null,
+      weekDays: null,
       preAlarmMinutes: 15,
       posAlarmMinutes: 15,
     });
@@ -150,7 +156,12 @@ export function MedicineEditModal({
         }
 
         const { getAllSchedules } = await import("@/services/api/schedule");
-        const response = await getAllSchedules(token, 1, 1000);
+        const response = await getAllSchedules(
+          token,
+          1,
+          1000,
+          memberId || undefined
+        );
 
         if (response.success && response.data) {
           const schedule = response.data.items.find(
@@ -167,7 +178,7 @@ export function MedicineEditModal({
         resetFormWithoutSchedule();
       }
     },
-    [medicine, resetFormWithSchedule, resetFormWithoutSchedule]
+    [medicine, memberId, resetFormWithSchedule, resetFormWithoutSchedule]
   );
 
   useEffect(() => {
@@ -185,28 +196,86 @@ export function MedicineEditModal({
     setIsConfirmModalVisible(true);
   };
 
-  const createScheduleRequest = (data: MedicineWithScheduleUpdateFormData) => {
-    const timeOnly = dateToTimeOnly(data.scheduledTime);
-    if (!timeOnly) {
-      return null;
+  const addScheduleTypeSpecificFields = (
+    request: {
+      id: string;
+      medicineId: string;
+      scheduleType: MedicineScheduleType;
+      timeOfDay?: string | null;
+      timesOfDay?: string[] | null;
+      intervalInHours?: number | null;
+      firstDoseAt?: string | null;
+      weekDays?: number[] | null;
+      preAlarmMinutes?: number | null;
+      posAlarmMinutes?: number | null;
+    },
+    data: MedicineWithScheduleUpdateFormData
+  ) => {
+    const scheduleType = data.scheduleType || MedicineScheduleType.OncePerDay;
+
+    if (
+      scheduleType === MedicineScheduleType.OncePerDay ||
+      scheduleType === MedicineScheduleType.SpecificWeekDays
+    ) {
+      request.timeOfDay = data.timeOfDay || null;
     }
+
+    if (scheduleType === MedicineScheduleType.SpecificWeekDays) {
+      request.weekDays = data.weekDays || null;
+      return;
+    }
+
+    if (scheduleType === MedicineScheduleType.MultipleFixedTimesPerDay) {
+      request.timesOfDay = data.timesOfDay || null;
+      return;
+    }
+
+    if (scheduleType === MedicineScheduleType.EveryXHours) {
+      request.intervalInHours = data.intervalInHours || null;
+      request.firstDoseAt = data.firstDoseAt || null;
+    }
+  };
+
+  const buildScheduleRequest = (
+    data: MedicineWithScheduleUpdateFormData
+  ): {
+    id: string;
+    medicineId: string;
+    scheduleType: MedicineScheduleType;
+    timeOfDay?: string | null;
+    timesOfDay?: string[] | null;
+    intervalInHours?: number | null;
+    firstDoseAt?: string | null;
+    weekDays?: number[] | null;
+    preAlarmMinutes?: number | null;
+    posAlarmMinutes?: number | null;
+  } | null => {
     if (!scheduleId) {
       return null;
     }
 
-    const isWeekly = data.frequencyType === FrequencyType.Weekly;
-    const hasWeekDays = Boolean(data.weekDays && data.weekDays.length > 0);
-    const weekDays = isWeekly && hasWeekDays ? data.weekDays : null;
-
-    return {
+    const request: {
+      id: string;
+      medicineId: string;
+      scheduleType: MedicineScheduleType;
+      timeOfDay?: string | null;
+      timesOfDay?: string[] | null;
+      intervalInHours?: number | null;
+      firstDoseAt?: string | null;
+      weekDays?: number[] | null;
+      preAlarmMinutes?: number | null;
+      posAlarmMinutes?: number | null;
+    } = {
       id: scheduleId,
       medicineId: medicine.id,
-      scheduledTime: timeOnly,
-      frequencyType: data.frequencyType,
-      preAlarmMinutes: data.preAlarmMinutes,
-      posAlarmMinutes: data.posAlarmMinutes,
-      weekDays: weekDays ?? null,
+      scheduleType: data.scheduleType || MedicineScheduleType.OncePerDay,
+      preAlarmMinutes: data.preAlarmMinutes || null,
+      posAlarmMinutes: data.posAlarmMinutes || null,
     };
+
+    addScheduleTypeSpecificFields(request, data);
+
+    return request;
   };
 
   const handleUpdateSchedule = async (
@@ -217,20 +286,17 @@ export function MedicineEditModal({
       return true; // No schedule to update
     }
 
-    const scheduleRequest = createScheduleRequest(data);
+    const scheduleRequest = buildScheduleRequest(data);
     if (!scheduleRequest) {
-      showToast("Erro ao processar horário", "error");
-      return false;
-    }
-    if (!scheduleRequest.id) {
-      showToast("Erro ao processar horário", "error");
+      showToast("Erro ao processar agendamento", "error");
       return false;
     }
 
     const scheduleResponse = await updateSchedule(
       scheduleRequest.id,
       scheduleRequest,
-      token
+      token,
+      memberId || undefined
     );
 
     if (!scheduleResponse.success) {
@@ -287,12 +353,18 @@ export function MedicineEditModal({
           return;
         }
 
-        const medicineUpdated = await handleUpdateMedicine(data, token);
+        const medicineUpdated = await handleUpdateMedicine(
+          data as unknown as MedicineWithScheduleUpdateFormData,
+          token
+        );
         if (!medicineUpdated) {
           return;
         }
 
-        const scheduleUpdated = await handleUpdateSchedule(data, token);
+        const scheduleUpdated = await handleUpdateSchedule(
+          data as unknown as MedicineWithScheduleUpdateFormData,
+          token
+        );
         if (!scheduleUpdated) {
           return;
         }
@@ -302,6 +374,7 @@ export function MedicineEditModal({
           "success"
         );
         setIsConfirmModalVisible(false);
+        reset();
         onClose();
       } catch (error) {
         const errorMessage =
@@ -454,27 +527,7 @@ export function MedicineEditModal({
             </StyledText>
             <Controller
               control={control}
-              name="scheduledTime"
-              render={({ field: { onChange, value } }) => (
-                <>
-                  <InputDate
-                    mode="time"
-                    onChange={onChange}
-                    placeholder="Horário"
-                    suffixIcon="clock-o"
-                    value={value || null}
-                  />
-                  {errors.scheduledTime && (
-                    <StyledText color="error" variant="mediumRegular">
-                      {errors.scheduledTime.message}
-                    </StyledText>
-                  )}
-                </>
-              )}
-            />
-            <Controller
-              control={control}
-              name="frequencyType"
+              name="scheduleType"
               render={({ field: { onChange, value } }) => (
                 <>
                   <InputSelect
@@ -483,21 +536,57 @@ export function MedicineEditModal({
                         typeof val === "string"
                           ? Number.parseInt(val, 10)
                           : val;
-                      onChange(numVal as FrequencyType);
+                      onChange(numVal as MedicineScheduleType);
                     }}
-                    options={getFrequencyTypeOptions()}
-                    placeholder="Frequência"
+                    options={getMedicineScheduleTypeOptions()}
+                    placeholder="Tipo de agendamento"
                     value={value.toString()}
                   />
-                  {errors.frequencyType && (
+                  {errors.scheduleType && (
                     <StyledText color="error" variant="mediumRegular">
-                      {errors.frequencyType.message}
+                      {errors.scheduleType.message}
                     </StyledText>
                   )}
                 </>
               )}
             />
-            {frequencyType === FrequencyType.Weekly && (
+            {(scheduleType === MedicineScheduleType.OncePerDay ||
+              scheduleType === MedicineScheduleType.SpecificWeekDays) && (
+              <Controller
+                control={control}
+                name="timeOfDay"
+                render={({ field: { onChange, value } }) => {
+                  // Converter string para Date para InputDate
+                  const dateValue = value
+                    ? new Date(`2000-01-01T${value}`)
+                    : null;
+                  return (
+                    <>
+                      <InputDate
+                        mode="time"
+                        onChange={(date) => {
+                          if (date) {
+                            const timeStr = dateToTimeOnly(date);
+                            onChange(timeStr || null);
+                          } else {
+                            onChange(null);
+                          }
+                        }}
+                        placeholder="Horário"
+                        suffixIcon="clock-o"
+                        value={dateValue}
+                      />
+                      {errors.timeOfDay && (
+                        <StyledText color="error" variant="mediumRegular">
+                          {errors.timeOfDay.message}
+                        </StyledText>
+                      )}
+                    </>
+                  );
+                }}
+              />
+            )}
+            {scheduleType === MedicineScheduleType.SpecificWeekDays && (
               <>
                 <StyledText style={{ marginTop: 8 }} variant="mediumRegular">
                   Dias da semana
@@ -508,30 +597,29 @@ export function MedicineEditModal({
                   render={({ field: { onChange, value } }) => (
                     <>
                       <WeekDaysWrapper>
-                        {Object.entries(WeekDay)
-                          .filter(([, val]) => typeof val === "number")
-                          .map(([, val]) => {
-                            const day = val as WeekDay;
-                            const isSelected = (value || []).includes(day);
-                            return (
-                              <MultiSelectTag
-                                id={day}
-                                isSelected={isSelected}
-                                key={day}
-                                label={weekDayLabels[day]}
-                                onPress={() => {
-                                  const currentWeekDays = value || [];
-                                  if (isSelected) {
-                                    onChange(
-                                      currentWeekDays.filter((d) => d !== day)
-                                    );
-                                  } else {
-                                    onChange([...currentWeekDays, day]);
-                                  }
-                                }}
-                              />
-                            );
-                          })}
+                        {[1, 2, 3, 4, 5, 6, 7].map((dayNum) => {
+                          const dayLabel =
+                            weekDayLabels[dayNum as WeekDay] || `Dia ${dayNum}`;
+                          const isSelected = (value || []).includes(dayNum);
+                          return (
+                            <MultiSelectTag
+                              id={dayNum}
+                              isSelected={isSelected}
+                              key={dayNum}
+                              label={dayLabel}
+                              onPress={() => {
+                                const currentWeekDays = value || [];
+                                if (isSelected) {
+                                  onChange(
+                                    currentWeekDays.filter((d) => d !== dayNum)
+                                  );
+                                } else {
+                                  onChange([...currentWeekDays, dayNum]);
+                                }
+                              }}
+                            />
+                          );
+                        })}
                       </WeekDaysWrapper>
                       {errors.weekDays && (
                         <StyledText color="error" variant="mediumRegular">
@@ -558,7 +646,7 @@ export function MedicineEditModal({
                         onChange(Number.isNaN(num) ? 0 : num);
                       }}
                       placeholder="Alarme antes (min)"
-                      value={value > 0 ? value.toString() : ""}
+                      value={value && value > 0 ? value.toString() : ""}
                     />
                     {errors.preAlarmMinutes && (
                       <StyledText color="error" variant="mediumRegular">
@@ -582,7 +670,7 @@ export function MedicineEditModal({
                         onChange(Number.isNaN(num) ? 0 : num);
                       }}
                       placeholder="Alarme depois (min)"
-                      value={value > 0 ? value.toString() : ""}
+                      value={value && value > 0 ? value.toString() : ""}
                     />
                     {errors.posAlarmMinutes && (
                       <StyledText color="error" variant="mediumRegular">

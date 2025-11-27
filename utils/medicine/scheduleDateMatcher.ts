@@ -1,4 +1,4 @@
-import { FrequencyType, type WeekDay } from "@/services/@types/enums";
+import { MedicineScheduleType } from "@/services/@types/enums";
 import type { MedicineDtoResponse } from "@/services/@types/medicine";
 import type { ScheduleDtoResponse } from "@/services/@types/schedule";
 import { dateOnlyToDate } from "@/utils/DateFormatters/dateOnly";
@@ -33,28 +33,42 @@ export function scheduleAppliesToDate(
     }
   }
 
-  // Check frequency type
-  if (schedule.frequencyType === FrequencyType.Daily) {
-    return true;
-  }
+  // Check schedule type
+  switch (schedule.scheduleType) {
+    case MedicineScheduleType.OncePerDay:
+    case MedicineScheduleType.MultipleFixedTimesPerDay:
+      // Aplica todos os dias dentro do período do remédio
+      return true;
 
-  if (schedule.frequencyType === FrequencyType.Weekly) {
-    if (!schedule.weekDays || schedule.weekDays.length === 0) {
-      return false;
+    case MedicineScheduleType.SpecificWeekDays: {
+      if (!schedule.weekDays || schedule.weekDays.length === 0) {
+        return false;
+      }
+      // Backend uses: Monday = 1, Tuesday = 2, ..., Sunday = 7
+      // JS uses: Sunday = 0, Monday = 1, ..., Saturday = 6
+      const dayOfWeek = targetDate.getDay(); // JS: 0=Sunday, 1=Monday, ..., 6=Saturday
+      // Convert JS day to backend format: Monday=1, Tuesday=2, ..., Sunday=7
+      const backendDay = dayOfWeek === 0 ? 7 : dayOfWeek;
+      return schedule.weekDays.includes(backendDay);
     }
-    // Get day of week (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
-    // Backend uses: Monday = 1, Tuesday = 2, ..., Sunday = 7
-    const dayOfWeek = targetDate.getDay(); // JS: 0=Sunday, 1=Monday, ..., 6=Saturday
-    // Convert JS day to backend format: Monday=1, Tuesday=2, ..., Sunday=7
-    const backendDay = dayOfWeek === 0 ? 7 : dayOfWeek;
-    return schedule.weekDays.includes(backendDay as WeekDay);
-  }
 
-  if (schedule.frequencyType === FrequencyType.Monthly) {
-    // Monthly: apply on the same day of month
-    const startDay = startDate.getDate();
-    return targetDate.getDate() === startDay;
-  }
+    case MedicineScheduleType.EveryXHours: {
+      // Para intervalos, verifica se a data está dentro do período
+      // O cálculo exato de horários é feito pelo backend
+      if (schedule.firstDoseAt) {
+        const firstDose = new Date(schedule.firstDoseAt);
+        const firstDoseDate = new Date(firstDose);
+        firstDoseDate.setHours(0, 0, 0, 0);
+        return normalizedTarget >= firstDoseDate;
+      }
+      return true;
+    }
 
-  return false;
+    case MedicineScheduleType.AsNeeded:
+      // "Quando necessário" não aparece no calendário automático
+      return false;
+
+    default:
+      return false;
+  }
 }

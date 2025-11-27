@@ -4,6 +4,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
 import { ToastProvider } from "@/components/ui/Toast";
 import { useUserStore } from "@/stores";
+import { useWebSocketNotifications } from "@/services/websocket/useWebSocketNotifications";
 import AnimatedSplash from "./AnimatedSplash";
 import "react-native-reanimated";
 
@@ -61,6 +62,9 @@ export default function RootLayout() {
 function RootLayoutNav() {
   const { isLoggedIn, token } = useUserStore();
   const isAuthenticated = isLoggedIn || !!token;
+
+  // Initialize websocket notifications when authenticated
+  useWebSocketNotifications();
 
   return (
     <Stack screenOptions={{ headerShown: false }}>

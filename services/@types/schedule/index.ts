@@ -1,31 +1,39 @@
-import type { FrequencyType, WeekDay } from "../enums";
+import type { MedicineScheduleType } from "../enums";
 
 export type ScheduleDtoResponse = {
   id: string;
   medicineId: string;
-  scheduledTime: string; // TimeOnly format: HH:mm:ss
-  frequencyType: FrequencyType;
-  preAlarmMinutes: number;
-  posAlarmMinutes: number;
-  weekDays: WeekDay[];
+  scheduleType: MedicineScheduleType;
+  timeOfDay: string | null; // TimeOnly format: HH:mm:ss
+  timesOfDay: string[] | null; // Array of TimeOnly format: HH:mm:ss
+  intervalInHours: number | null;
+  firstDoseAt: string | null; // ISO 8601 with timezone: "2025-11-16T19:00:00Z"
+  weekDays: number[] | null; // 1 = Monday ... 7 = Sunday
+  preAlarmMinutes: number | null;
+  posAlarmMinutes: number | null;
 };
 
 export type CreateScheduleRequest = {
   medicineId: string;
-  scheduledTime: string; // TimeOnly format: HH:mm:ss
-  frequencyType: FrequencyType;
-  preAlarmMinutes: number;
-  posAlarmMinutes: number;
-  weekDays: WeekDay[] | null;
+  scheduleType: MedicineScheduleType;
+  timeOfDay?: string | null; // TimeOnly format: HH:mm:ss
+  timesOfDay?: string[] | null; // Array of TimeOnly format: HH:mm:ss
+  intervalInHours?: number | null;
+  firstDoseAt?: string | null; // ISO 8601 with timezone: "2025-11-16T19:00:00Z"
+  weekDays?: number[] | null; // 1 = Monday ... 7 = Sunday
+  preAlarmMinutes?: number | null;
+  posAlarmMinutes?: number | null;
 };
 
 export type UpdateScheduleRequest = {
   id: string;
   medicineId: string;
-  scheduledTime: string; // TimeOnly format: HH:mm:ss
-  frequencyType: FrequencyType;
-  preAlarmMinutes: number;
-  posAlarmMinutes: number;
-  weekDays: WeekDay[] | null;
+  scheduleType: MedicineScheduleType;
+  timeOfDay?: string | null;
+  timesOfDay?: string[] | null;
+  intervalInHours?: number | null;
+  firstDoseAt?: string | null;
+  weekDays?: number[] | null;
+  preAlarmMinutes?: number | null;
+  posAlarmMinutes?: number | null;
 };
-

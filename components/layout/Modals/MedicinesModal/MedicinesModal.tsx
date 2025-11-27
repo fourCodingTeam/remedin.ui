@@ -3,9 +3,10 @@ import { useCallback, useEffect, useState } from "react";
 import { Button, StyledText } from "@/components/ui";
 import { DetailedMedicineCheckboxCard } from "@/components/ui/Common/CheckboxCard";
 import { useToast } from "@/components/ui/Toast";
+import { useMemberContext } from "@/hooks";
 import { dosageUnitLabels } from "@/services/@types/enums";
 import type { MedicineDtoResponse } from "@/services/@types/medicine";
-import { getAllMedicines } from "@/services/api/medicine";
+import { getAllMedicines, softDeleteMedicine } from "@/services/api/medicine";
 import { getAllSchedules } from "@/services/api/schedule";
 import { getAuthToken } from "@/services/utils/getAuthToken";
 import { formatDateOnlyToDisplay } from "@/utils/DateFormatters/dateOnly";
@@ -44,9 +45,18 @@ function mapSchedulesToMedicines(
     const medicineSchedules = scheduleItems.filter(
       (schedule) => schedule.medicineId === medicine.id
     );
-    const scheduleTimes = medicineSchedules.map((schedule) =>
-      formatTimeOnlyToDisplay(schedule.scheduledTime)
-    );
+
+    // Extrair horários baseado no tipo de schedule
+    const scheduleTimes: string[] = [];
+    for (const schedule of medicineSchedules) {
+      if (schedule.timeOfDay) {
+        scheduleTimes.push(formatTimeOnlyToDisplay(schedule.timeOfDay));
+      } else if (schedule.timesOfDay && schedule.timesOfDay.length > 0) {
+        for (const time of schedule.timesOfDay) {
+          scheduleTimes.push(formatTimeOnlyToDisplay(time));
+        }
+      }
+    }
 
     return {
       ...medicine,
@@ -68,6 +78,7 @@ export function MedicinesModal({ isVisible, onClose }: MedicinesModalProps) {
   const [editingMedicine, setEditingMedicine] =
     useState<MedicineDtoResponse | null>(null);
   const { showToast } = useToast();
+  const { memberId } = useMemberContext();
 
   const loadMedicines = useCallback(async () => {
     setIsLoading(true);
@@ -82,8 +93,8 @@ export function MedicinesModal({ isVisible, onClose }: MedicinesModalProps) {
       }
 
       const [medicinesResponse, schedulesResponse] = await Promise.all([
-        getAllMedicines(token, 1, 100),
-        getAllSchedules(token, 1, 1000),
+        getAllMedicines(token, 1, 100, memberId || undefined),
+        getAllSchedules(token, 1, 1000, memberId || undefined),
       ]);
 
       if (!medicinesResponse.success) {
@@ -152,11 +163,55 @@ export function MedicinesModal({ isVisible, onClose }: MedicinesModalProps) {
     loadMedicines();
   };
 
-  const handleDeleteConfirm = () => {
-    // TODO: Implement delete functionality when backend endpoint is available
+  const handleDeleteConfirm = async () => {
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        showToast(
+          "Você precisa estar autenticado para deletar medicações",
+          "error"
+        );
+        return;
+      }
+
+      const selectedIds = Array.from(selectedMedicines);
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const id of selectedIds) {
+        const response = await softDeleteMedicine(
+          id,
+          token,
+          memberId || undefined
+        );
+        if (response.success) {
+          successCount++;
+        } else {
+          errorCount++;
+        }
+      }
+
+      if (successCount > 0) {
+        showToast(
+          `${successCount} medicação(ões) deletada(s) com sucesso!`,
+          "success"
+        );
+      }
+      if (errorCount > 0) {
+        showToast(
+          `Erro ao deletar ${errorCount} medicação(ões)`,
+          "error"
+        );
+      }
+
     setIsDeleteModalVisible(false);
     setSelectedMedicines(new Set());
-    showToast("Funcionalidade de deletar em desenvolvimento", "info");
+      await loadMedicines();
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Erro ao deletar medicações";
+      showToast(errorMessage, "error");
+    }
   };
 
   const handleEditClose = () => {

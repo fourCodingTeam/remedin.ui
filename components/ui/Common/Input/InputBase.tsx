@@ -1,3 +1,4 @@
+import { Eye, EyeOff } from "lucide-react-native";
 import type React from "react";
 import { useState } from "react";
 import { type BlurEvent, type FocusEvent, Pressable } from "react-native";
@@ -7,11 +8,16 @@ import {
   InputPrefixIconWrapper,
   InputStyle,
   InputSuffixIconWrapper,
+  PasswordToggleWrapper,
 } from "./InputBase.styles";
 import type { InputBaseProps } from "./InputBase.types";
 
 export const InputBase: React.FC<InputBaseProps> = (props) => {
   const [isFocused, setIsFocused] = useState(false);
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+
+  const isPassword = props.secureTextEntry === true;
+  const showPasswordToggle = isPassword;
 
   const onFocus = (e: FocusEvent) => {
     setIsFocused(true);
@@ -24,6 +30,10 @@ export const InputBase: React.FC<InputBaseProps> = (props) => {
     if (props.onBlur) {
       props.onBlur(e);
     }
+  };
+
+  const togglePasswordVisibility = () => {
+    setIsPasswordVisible(!isPasswordVisible);
   };
 
   return (
@@ -50,8 +60,18 @@ export const InputBase: React.FC<InputBaseProps> = (props) => {
           onBlur={onBlur}
           onFocus={onFocus}
           pointerEvents={props.editable === false ? "none" : undefined}
+          secureTextEntry={isPassword && !isPasswordVisible}
         />
-        {props.suffixIcon && (
+        {showPasswordToggle && (
+          <PasswordToggleWrapper onPress={togglePasswordVisibility}>
+            {isPasswordVisible ? (
+              <Eye color={theme.colors.text.muted} size={18} />
+            ) : (
+              <EyeOff color={theme.colors.text.muted} size={18} />
+            )}
+          </PasswordToggleWrapper>
+        )}
+        {props.suffixIcon && !showPasswordToggle && (
           <InputSuffixIconWrapper
             color={theme.colors.text.muted}
             name={props.suffixIcon}

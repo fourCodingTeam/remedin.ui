@@ -28,4 +28,3 @@ export type UpdateMedicineRequest = {
   endDate: string | null; // DateOnly format: YYYY-MM-DD
   observations: string | null;
 };
-

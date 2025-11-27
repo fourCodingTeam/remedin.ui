@@ -11,10 +11,11 @@ import {
   StyledText,
 } from "@/components/ui";
 import { useToast } from "@/components/ui/Toast";
+import { useMemberContext } from "@/hooks";
 import {
   DosageUnit,
-  FrequencyType,
-  WeekDay,
+  MedicineScheduleType,
+  type WeekDay,
   weekDayLabels,
 } from "@/services/@types/enums";
 import { createMedicine } from "@/services/api/medicine";
@@ -23,7 +24,7 @@ import { getAuthToken } from "@/services/utils/getAuthToken";
 import { dateToDateOnly } from "@/utils/DateFormatters/dateOnly";
 import { dateToTimeOnly } from "@/utils/DateFormatters/timeOnly";
 import { getDosageUnitOptions } from "@/utils/medicine/dosageUnitMapper";
-import { getFrequencyTypeOptions } from "@/utils/schedule/frequencyTypeMapper";
+import { getMedicineScheduleTypeOptions } from "@/utils/schedule/medicineScheduleTypeMapper";
 import {
   type MedicineWithScheduleFormData,
   medicineWithScheduleSchema,
@@ -46,6 +47,7 @@ export function MedicineFormModal({
   onClose,
 }: MedicineFormModalProps) {
   const { showToast } = useToast();
+  const { memberId } = useMemberContext();
 
   const {
     control,
@@ -62,16 +64,16 @@ export function MedicineFormModal({
       startDate: undefined,
       endDate: undefined,
       observations: "",
-      scheduledTime: undefined,
-      frequencyType: FrequencyType.Daily,
-      weekDays: [],
+      scheduleType: MedicineScheduleType.OncePerDay,
+      timeOfDay: null,
+      weekDays: null,
       preAlarmMinutes: 15,
       posAlarmMinutes: 15,
     },
     mode: "onChange",
   });
 
-  const frequencyType = watch("frequencyType");
+  const scheduleType = watch("scheduleType");
 
   useEffect(() => {
     if (!isVisible) {
@@ -97,7 +99,11 @@ export function MedicineFormModal({
       observations: data.observations?.trim() || null,
     };
 
-    const medicineResponse = await createMedicine(createRequest, token);
+    const medicineResponse = await createMedicine(
+      createRequest,
+      token,
+      memberId || undefined
+    );
 
     if (!(medicineResponse.success && medicineResponse.data)) {
       showToast(
@@ -110,32 +116,102 @@ export function MedicineFormModal({
     return medicineResponse.data.id;
   };
 
+  const validateScheduleData = (
+    data: MedicineWithScheduleFormData
+  ): string | null => {
+    const scheduleType = data.scheduleType || MedicineScheduleType.OncePerDay;
+
+    const needsTimeOfDay =
+      scheduleType === MedicineScheduleType.OncePerDay ||
+      scheduleType === MedicineScheduleType.SpecificWeekDays;
+    if (needsTimeOfDay && !data.timeOfDay) {
+      return "Horário é obrigatório para este tipo de agendamento";
+    }
+
+    if (
+      scheduleType === MedicineScheduleType.SpecificWeekDays &&
+      (!data.weekDays || data.weekDays.length === 0)
+    ) {
+      return "Selecione pelo menos um dia da semana";
+    }
+
+    if (
+      scheduleType === MedicineScheduleType.MultipleFixedTimesPerDay &&
+      (!data.timesOfDay || data.timesOfDay.length === 0)
+    ) {
+      return "Adicione pelo menos um horário";
+    }
+
+    if (
+      scheduleType === MedicineScheduleType.EveryXHours &&
+      !(data.intervalInHours && data.firstDoseAt)
+    ) {
+      return "Intervalo e primeira dose são obrigatórios";
+    }
+
+    return null;
+  };
+
+  const buildScheduleRequest = (
+    data: MedicineWithScheduleFormData,
+    medicineId: string
+  ) => {
+    const scheduleType = data.scheduleType || MedicineScheduleType.OncePerDay;
+    const request: {
+      medicineId: string;
+      scheduleType: MedicineScheduleType;
+      timeOfDay?: string | null;
+      timesOfDay?: string[] | null;
+      intervalInHours?: number | null;
+      firstDoseAt?: string | null;
+      weekDays?: number[] | null;
+      preAlarmMinutes?: number | null;
+      posAlarmMinutes?: number | null;
+    } = {
+      medicineId,
+      scheduleType,
+      preAlarmMinutes: data.preAlarmMinutes || null,
+      posAlarmMinutes: data.posAlarmMinutes || null,
+    };
+
+    const isOncePerDay = scheduleType === MedicineScheduleType.OncePerDay;
+    const isSpecificWeekDays =
+      scheduleType === MedicineScheduleType.SpecificWeekDays;
+    const needsTimeOfDay = isOncePerDay || isSpecificWeekDays;
+
+    if (needsTimeOfDay) {
+      request.timeOfDay = data.timeOfDay || null;
+    }
+
+    if (isSpecificWeekDays) {
+      request.weekDays = data.weekDays || null;
+    } else if (scheduleType === MedicineScheduleType.MultipleFixedTimesPerDay) {
+      request.timesOfDay = data.timesOfDay || null;
+    } else if (scheduleType === MedicineScheduleType.EveryXHours) {
+      request.intervalInHours = data.intervalInHours || null;
+      request.firstDoseAt = data.firstDoseAt || null;
+    }
+
+    return request;
+  };
+
   const handleCreateSchedule = async (
     data: MedicineWithScheduleFormData,
     medicineId: string,
     token: string
   ) => {
-    const timeOnly = dateToTimeOnly(data.scheduledTime);
-    if (!timeOnly) {
-      showToast("Erro ao processar horário", "error");
+    const validationError = validateScheduleData(data);
+    if (validationError) {
+      showToast(validationError, "error");
       return false;
     }
 
-    const scheduleRequest = {
-      medicineId,
-      scheduledTime: timeOnly,
-      frequencyType: data.frequencyType,
-      preAlarmMinutes: data.preAlarmMinutes,
-      posAlarmMinutes: data.posAlarmMinutes,
-      weekDays:
-        data.frequencyType === FrequencyType.Weekly &&
-        data.weekDays &&
-        data.weekDays.length > 0
-          ? data.weekDays
-          : null,
-    };
-
-    const scheduleResponse = await createSchedule(scheduleRequest, token);
+    const scheduleRequest = buildScheduleRequest(data, medicineId);
+    const scheduleResponse = await createSchedule(
+      scheduleRequest,
+      token,
+      memberId || undefined
+    );
 
     if (!scheduleResponse.success) {
       showToast(
@@ -326,27 +402,7 @@ export function MedicineFormModal({
             </StyledText>
             <Controller
               control={control}
-              name="scheduledTime"
-              render={({ field: { onChange, value } }) => (
-                <>
-                  <InputDate
-                    mode="time"
-                    onChange={onChange}
-                    placeholder="Horário"
-                    suffixIcon="clock-o"
-                    value={value || null}
-                  />
-                  {errors.scheduledTime && (
-                    <StyledText color="error" variant="mediumRegular">
-                      {errors.scheduledTime.message}
-                    </StyledText>
-                  )}
-                </>
-              )}
-            />
-            <Controller
-              control={control}
-              name="frequencyType"
+              name="scheduleType"
               render={({ field: { onChange, value } }) => (
                 <>
                   <InputSelect
@@ -355,21 +411,57 @@ export function MedicineFormModal({
                         typeof val === "string"
                           ? Number.parseInt(val, 10)
                           : val;
-                      onChange(numVal as FrequencyType);
+                      onChange(numVal as MedicineScheduleType);
                     }}
-                    options={getFrequencyTypeOptions()}
-                    placeholder="Frequência"
+                    options={getMedicineScheduleTypeOptions()}
+                    placeholder="Tipo de agendamento"
                     value={value.toString()}
                   />
-                  {errors.frequencyType && (
+                  {errors.scheduleType && (
                     <StyledText color="error" variant="mediumRegular">
-                      {errors.frequencyType.message}
+                      {errors.scheduleType.message}
                     </StyledText>
                   )}
                 </>
               )}
             />
-            {frequencyType === FrequencyType.Weekly && (
+            {scheduleType === MedicineScheduleType.OncePerDay ||
+            scheduleType === MedicineScheduleType.SpecificWeekDays ? (
+              <Controller
+                control={control}
+                name="timeOfDay"
+                render={({ field: { onChange, value } }) => {
+                  // Converter string para Date para InputDate
+                  const dateValue = value
+                    ? new Date(`2000-01-01T${value}`)
+                    : null;
+                  return (
+                    <>
+                      <InputDate
+                        mode="time"
+                        onChange={(date) => {
+                          if (date) {
+                            const timeStr = dateToTimeOnly(date);
+                            onChange(timeStr || null);
+                          } else {
+                            onChange(null);
+                          }
+                        }}
+                        placeholder="Horário"
+                        suffixIcon="clock-o"
+                        value={dateValue}
+                      />
+                      {errors.timeOfDay && (
+                        <StyledText color="error" variant="mediumRegular">
+                          {errors.timeOfDay.message}
+                        </StyledText>
+                      )}
+                    </>
+                  );
+                }}
+              />
+            ) : null}
+            {scheduleType === MedicineScheduleType.SpecificWeekDays ? (
               <>
                 <StyledText style={{ marginTop: 8 }} variant="mediumRegular">
                   Dias da semana
@@ -380,30 +472,29 @@ export function MedicineFormModal({
                   render={({ field: { onChange, value } }) => (
                     <>
                       <WeekDaysWrapper>
-                        {Object.entries(WeekDay)
-                          .filter(([, val]) => typeof val === "number")
-                          .map(([, val]) => {
-                            const day = val as WeekDay;
-                            const isSelected = (value || []).includes(day);
-                            return (
-                              <MultiSelectTag
-                                id={day}
-                                isSelected={isSelected}
-                                key={day}
-                                label={weekDayLabels[day]}
-                                onPress={() => {
-                                  const currentWeekDays = value || [];
-                                  if (isSelected) {
-                                    onChange(
-                                      currentWeekDays.filter((d) => d !== day)
-                                    );
-                                  } else {
-                                    onChange([...currentWeekDays, day]);
-                                  }
-                                }}
-                              />
-                            );
-                          })}
+                        {[1, 2, 3, 4, 5, 6, 7].map((dayNum) => {
+                          const dayLabel =
+                            weekDayLabels[dayNum as WeekDay] || `Dia ${dayNum}`;
+                          const isSelected = (value || []).includes(dayNum);
+                          return (
+                            <MultiSelectTag
+                              id={dayNum}
+                              isSelected={isSelected}
+                              key={dayNum}
+                              label={dayLabel}
+                              onPress={() => {
+                                const currentWeekDays = value || [];
+                                if (isSelected) {
+                                  onChange(
+                                    currentWeekDays.filter((d) => d !== dayNum)
+                                  );
+                                } else {
+                                  onChange([...currentWeekDays, dayNum]);
+                                }
+                              }}
+                            />
+                          );
+                        })}
                       </WeekDaysWrapper>
                       {errors.weekDays && (
                         <StyledText color="error" variant="mediumRegular">
@@ -414,7 +505,7 @@ export function MedicineFormModal({
                   )}
                 />
               </>
-            )}
+            ) : null}
             <SideBySideInputsWrapper>
               <Controller
                 control={control}
@@ -430,7 +521,7 @@ export function MedicineFormModal({
                         onChange(Number.isNaN(num) ? 0 : num);
                       }}
                       placeholder="Alarme antes (min)"
-                      value={value > 0 ? value.toString() : ""}
+                      value={value && value > 0 ? value.toString() : ""}
                     />
                     {errors.preAlarmMinutes && (
                       <StyledText color="error" variant="mediumRegular">
@@ -454,7 +545,7 @@ export function MedicineFormModal({
                         onChange(Number.isNaN(num) ? 0 : num);
                       }}
                       placeholder="Alarme depois (min)"
-                      value={value > 0 ? value.toString() : ""}
+                      value={value && value > 0 ? value.toString() : ""}
                     />
                     {errors.posAlarmMinutes && (
                       <StyledText color="error" variant="mediumRegular">

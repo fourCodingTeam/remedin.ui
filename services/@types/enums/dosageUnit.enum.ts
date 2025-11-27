@@ -19,4 +19,3 @@ export const dosageUnitLabels: Record<DosageUnit, string> = {
   [DosageUnit.Capsula]: "Cápsulas",
   [DosageUnit.Unidade]: "Unidades",
 };
-
