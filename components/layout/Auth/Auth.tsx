@@ -3,7 +3,8 @@ import { useCallback, useState } from "react";
 import { Alert } from "react-native";
 import { signInWithGoogle } from "@/auth/signIn";
 import { Button } from "@/components/ui";
-import { GetCurrentPerson } from "@/services/api/person";
+import { GetCurrentPerson, loadAllMembersWithFullData } from "@/services/api/person";
+import { useMemberStore } from "@/stores/MemberStore";
 import { useUserStore } from "@/stores/UserStore";
 import { ButtonsWrapper, StyledImage, StyledView } from "./Auth.styles";
 import { AuthModal } from "./AuthSteps";
@@ -17,6 +18,7 @@ export function Auth() {
     setIsLoggedIn,
     setPersonData,
   } = useUserStore();
+  const { setMembers } = useMemberStore();
   const [isLoginModalVisible, setIsLoginModalVisible] = useState(false);
   const [isRegisterModalVisible, setIsRegisterModalVisible] = useState(false);
 
@@ -80,6 +82,17 @@ export function Auth() {
         setUsername(displayName);
       }
 
+      // Load all members with full data
+      const membersResponse = await loadAllMembersWithFullData(token);
+      if (membersResponse.success && membersResponse.data) {
+        const membersWithPhone = membersResponse.data.map((member) => ({
+          ...member,
+          phoneNumber: member.phone || "",
+          avatar: "",
+        }));
+        setMembers(membersWithPhone);
+      }
+
       setIsLoggedIn(true);
       router.push("/(tabs)");
     } catch {
@@ -88,7 +101,7 @@ export function Auth() {
         "Não foi possível completar o login com o Google. Tente novamente."
       );
     }
-  }, [setEmail, setIsLoggedIn, setToken, setUsername, setPersonData]);
+  }, [setEmail, setIsLoggedIn, setToken, setUsername, setPersonData, setMembers]);
 
   return (
     <StyledView>

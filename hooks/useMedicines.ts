@@ -38,6 +38,9 @@ export function useMedicines(memberId?: string | null) {
 
   const loadMedicines = useCallback(async () => {
     setIsLoading(true);
+    // Clear medicines immediately when memberId changes to prevent showing wrong data
+    setMedicines([]);
+    
     try {
       const token = await getAuthToken();
       if (!token) {
@@ -53,10 +56,15 @@ export function useMedicines(memberId?: string | null) {
       const hasError = !medicinesResponse.success;
       const noData = !medicinesResponse.data;
       if (hasError || noData) {
-        showToast(
-          medicinesResponse.message || "Erro ao carregar medicações",
-          "error"
-        );
+        // Only show error if it's not just empty data
+        if (hasError) {
+          showToast(
+            medicinesResponse.message || "Erro ao carregar medicações",
+            "error"
+          );
+        }
+        // Set empty array if no data (member might not have medicines yet)
+        setMedicines([]);
         return;
       }
 
@@ -69,11 +77,14 @@ export function useMedicines(memberId?: string | null) {
           schedules
         );
         setMedicines(medicinesWithSchedules);
+      } else {
+        setMedicines([]);
       }
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Erro ao carregar medicações";
       showToast(errorMessage, "error");
+      setMedicines([]);
     } finally {
       setIsLoading(false);
     }

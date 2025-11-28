@@ -57,21 +57,19 @@ export function Health({ isMemberApp = false }: HealthProps) {
     reload: reloadHealth,
   } = useHealthData();
 
-  // Use latestHeight from API, fallback to member or user store based on context
   const displayHeight =
     latestHeight !== null
       ? latestHeight
-      : isMemberContext
+      : isMemberApp || isMemberContext
         ? height > 0
           ? height
           : null
         : heightCm;
 
-  // Use latestWeight from API, fallback to member or user store based on context
   const displayWeight =
     latestWeight !== null
       ? latestWeight
-      : isMemberContext
+      : isMemberApp || isMemberContext
         ? weight > 0
           ? weight
           : null

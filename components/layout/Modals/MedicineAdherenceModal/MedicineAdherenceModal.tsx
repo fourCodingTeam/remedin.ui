@@ -4,6 +4,7 @@ import Modal from "react-native-modal";
 import { Button, StyledText } from "@/components/ui";
 import { useToast } from "@/components/ui/Toast";
 import { theme } from "@/constants/theme";
+import { useMemberContext } from "@/hooks";
 import {
   type DoseOccurrenceDto,
   getDoseOccurrenceByMedicineScheduleAndDate,
@@ -46,6 +47,7 @@ export function MedicineAdherenceModal({
   scheduleId,
   date,
 }: MedicineAdherenceModalProps) {
+  const { memberId } = useMemberContext();
   const [doseOccurrence, setDoseOccurrence] =
     useState<DoseOccurrenceDto | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -53,24 +55,44 @@ export function MedicineAdherenceModal({
   const { showToast } = useToast();
 
   const fetchDoseData = useCallback(
-    async (token: string, medId: string, schedId: string, dateObj: Date) => {
+    async (token: string, medId: string, schedId: string, dateObj: Date, retryCount = 0) => {
       const response = await getDoseOccurrenceByMedicineScheduleAndDate(
         medId,
         schedId,
         dateObj,
-        token
+        token,
+        memberId || undefined
       );
 
       if (response.success) {
-        setDoseOccurrence(response.data ?? null);
+        // If dose was found, set it
+        if (response.data) {
+          setDoseOccurrence(response.data);
+          return;
+        }
+        
+        // If dose not found and it's the first attempt, retry once after a short delay
+        // The backend creates doses automatically, so we give it a moment
+        if (!response.data && retryCount === 0) {
+          setTimeout(async () => {
+            await fetchDoseData(token, medId, schedId, dateObj, 1);
+          }, 800);
+          return;
+        }
+        
+        // After retry, if still not found, set to null
+        setDoseOccurrence(null);
       } else {
         const errorMessage =
           response.message || "Erro ao carregar informações da dose";
-        showToast(errorMessage, "error");
+        // Only show error toast if it's not a "not found" message or if it's the retry
+        if (retryCount > 0 || (!errorMessage.toLowerCase().includes("não encontrada") && !errorMessage.toLowerCase().includes("not found"))) {
+          showToast(errorMessage, "error");
+        }
         setDoseOccurrence(null);
       }
     },
-    [showToast]
+    [showToast, memberId]
   );
 
   const normalizeAndValidateDate = useCallback((): Date | null => {
@@ -93,7 +115,10 @@ export function MedicineAdherenceModal({
       return null;
     }
 
-    return dateObj;
+    // Normalize date to start of day (midnight) to avoid timezone issues
+    const normalized = new Date(dateObj);
+    normalized.setHours(0, 0, 0, 0);
+    return normalized;
   }, [date]);
 
   const validateAndLoadDose = useCallback(async () => {
@@ -156,7 +181,8 @@ export function MedicineAdherenceModal({
         {
           takenAt,
         },
-        token
+        token,
+        memberId || undefined
       );
 
       if (response.success) {
@@ -200,7 +226,8 @@ export function MedicineAdherenceModal({
         {
           reason: null,
         },
-        token
+        token,
+        memberId || undefined
       );
 
       if (response.success) {
@@ -237,7 +264,8 @@ export function MedicineAdherenceModal({
         {
           delayInMinutes,
         },
-        token
+        token,
+        memberId || undefined
       );
 
       if (response.success) {

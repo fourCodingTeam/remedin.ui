@@ -313,10 +313,59 @@ export async function getMembersByOwner(
   }
 }
 
+/**
+ * Carrega todos os membros com dados completos
+ */
+export async function loadAllMembersWithFullData(
+  token: string
+): Promise<BaseResponse<PersonResponse[]>> {
+  try {
+    // Primeiro, busca a lista de membros
+    const membersResponse = await getMembersByOwner(token);
+    if (!membersResponse.success || !membersResponse.data) {
+      return {
+        success: false,
+        code: membersResponse.code || 0,
+        message: membersResponse.message || "Erro ao buscar membros",
+        data: undefined,
+      };
+    }
+
+    // Para cada membro, busca os dados completos
+    const membersWithFullData: PersonResponse[] = [];
+    for (const member of membersResponse.data) {
+      const fullDataResponse = await getMemberById(member.id, token);
+      if (fullDataResponse.success && fullDataResponse.data) {
+        membersWithFullData.push(fullDataResponse.data);
+      }
+    }
+
+    return {
+      success: true,
+      code: 200,
+      message: undefined,
+      data: membersWithFullData,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      code: 0,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Erro ao carregar dados completos dos membros",
+      data: undefined,
+    };
+  }
+}
+
 export async function getMemberById(
   id: string,
   token: string
 ): Promise<BaseResponse<PersonResponse>> {
+  if (!id) {
+    throw new Error("ID do membro não encontrado");
+  }
   try {
     const response = await fetch(`${API_BASE_URL}/Person/${id}`, {
       method: "GET",

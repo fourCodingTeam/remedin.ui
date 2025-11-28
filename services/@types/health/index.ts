@@ -1,4 +1,4 @@
-export interface VitalSignRecordDto {
+export type VitalSignRecordDto = {
   id: string;
   type: number; // VitalSignType enum
   value: number;

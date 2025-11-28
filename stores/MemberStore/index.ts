@@ -1,14 +1,20 @@
 import { create } from "zustand";
-import type { MemberState } from "./@types";
+import type { MemberState, MemberData } from "./@types";
 
-export const useMemberStore = create<MemberState>((set) => ({
+export const useMemberStore = create<MemberState>((set, get) => ({
   member: {
-    id: 0,
+    id: "",
     name: "",
     phoneNumber: "",
     avatar: "",
   },
   setMember: (member: MemberState["member"]) => set({ member }),
+  members: [],
+  setMembers: (members: MemberData[]) => set({ members }),
+  getMemberById: (id: string) => {
+    const { members } = get();
+    return members.find((m) => m.id === id);
+  },
   weight: 0,
   setWeight: (weight: number) => set({ weight }),
   height: 0,

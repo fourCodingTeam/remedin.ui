@@ -6,7 +6,8 @@ import { InputBase } from "@/components/ui";
 import { Button } from "@/components/ui/Common/Button"; //
 import { StyledText } from "@/components/ui/Common/StyledText";
 import { useToast } from "@/components/ui/Toast";
-import { GetCurrentPerson } from "@/services/api/person";
+import { GetCurrentPerson, loadAllMembersWithFullData } from "@/services/api/person";
+import { useMemberStore } from "@/stores/MemberStore";
 import { useUserStore } from "@/stores";
 import { type LoginFormData, loginSchema } from "@/validators";
 import {
@@ -23,6 +24,7 @@ import type { AuthLoginProps } from "../AuthModal.types";
 export function AuthLogin({ onClose, onGoogleLogin }: AuthLoginProps) {
   const { setIsLoggedIn, setUsername, setEmail, setToken, setPersonData } =
     useUserStore();
+  const { setMembers } = useMemberStore();
   const { showToast } = useToast();
 
   const [authError, setAuthError] = useState<string | null>(null);
@@ -69,6 +71,17 @@ export function AuthLogin({ onClose, onGoogleLogin }: AuthLoginProps) {
         setUsername(
           response.user.user_metadata.username || response.user.email || null
         );
+      }
+
+      // Load all members with full data
+      const membersResponse = await loadAllMembersWithFullData(token);
+      if (membersResponse.success && membersResponse.data) {
+        const membersWithPhone = membersResponse.data.map((member) => ({
+          ...member,
+          phoneNumber: member.phone || "",
+          avatar: "",
+        }));
+        setMembers(membersWithPhone);
       }
 
       setIsLoggedIn(true);

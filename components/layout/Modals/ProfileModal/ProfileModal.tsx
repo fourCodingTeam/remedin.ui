@@ -16,9 +16,9 @@ import {
 import type { ProfileModalProps } from "./ProfileModal.types";
 
 export function ProfileModal({ isVisible, onClose }: ProfileModalProps) {
-  const { username, email, phoneNumber } = useUserStore();
-  const { member } = useMemberStore();
-  const { memberId } = useMemberContext();
+  const { username, email, phoneNumber, weightKg, heightCm } = useUserStore();
+  const { member, weight, height } = useMemberStore();
+  const { memberId, isMemberContext } = useMemberContext();
   const { showToast } = useToast();
   const {
     latestWeight,
@@ -119,6 +119,26 @@ export function ProfileModal({ isVisible, onClose }: ProfileModalProps) {
     memberData?.phone || phoneNumber || member?.phoneNumber || "";
   const displayEmail = memberData?.email || email || "";
 
+  // Use latestHeight from API, fallback to member or user store based on context
+  const displayHeight =
+    latestHeight !== null
+      ? latestHeight
+      : isMemberContext
+        ? height > 0
+          ? height
+          : null
+        : heightCm;
+
+  // Use latestWeight from API, fallback to member or user store based on context
+  const displayWeight =
+    latestWeight !== null
+      ? latestWeight
+      : isMemberContext
+        ? weight > 0
+          ? weight
+          : null
+        : weightKg;
+
   return (
     <ModalPageWrapper
       header={{
@@ -151,12 +171,12 @@ export function ProfileModal({ isVisible, onClose }: ProfileModalProps) {
           <InputBase
             editable={false}
             placeholder="Peso (kg)"
-            value={latestWeight !== null ? latestWeight.toString() : "-"}
+            value={displayWeight !== null ? displayWeight.toString() : "-"}
           />
           <InputBase
             editable={false}
             placeholder="Altura (cm)"
-            value={latestHeight !== null ? latestHeight.toString() : "-"}
+            value={displayHeight !== null ? displayHeight.toString() : "-"}
           />
           <InputBase
             editable={false}
@@ -172,7 +192,6 @@ export function ProfileModal({ isVisible, onClose }: ProfileModalProps) {
           />
         </InputsWrapper>
         <ButtonsWrapper addPadding>
-          <Button label="Editar" onPress={onClose} variant="primary" />
           <Button label="Voltar" onPress={onClose} variant="outline" />
         </ButtonsWrapper>
       </FormContentWrapper>

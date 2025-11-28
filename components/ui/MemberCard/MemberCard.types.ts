@@ -1,7 +1,7 @@
 import type { ImageSourcePropType } from "react-native";
 
 export type MemberCardProps = {
-  id: number;
+  id: string;
   name: string;
   phoneNumber?: string;
   avatar?: string | ImageSourcePropType;

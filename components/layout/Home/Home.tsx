@@ -78,6 +78,7 @@ export default function Home({ isMemberApp = false }: HomeProps) {
     { label: "Medicações agendadas", value: "scheduled" },
     { label: "Medicações não agendadas", value: "not_scheduled" },
     { label: "Medicações concluídas", value: "completed" },
+    { label: "Medicações pendentes", value: "pending" },
     { label: "Mais próximas", value: "nearest" },
     { label: "Mais distantes", value: "furthest" },
   ];
@@ -103,7 +104,7 @@ export default function Home({ isMemberApp = false }: HomeProps) {
     const enrichedCards = enrichCardsWithDoseStatus(cards, doseOccurrences);
 
     // Filter out any invalid cards that might have lost their structure
-    return enrichedCards.filter((card) => {
+    let validCards = enrichedCards.filter((card) => {
       const isValid =
         card &&
         card.card &&
@@ -117,7 +118,68 @@ export default function Home({ isMemberApp = false }: HomeProps) {
       }
       return isValid;
     });
-  }, [medicines, selectedDateObj, selectedDateKey, doseOccurrences]);
+
+    // Handle "not_scheduled" filter - medicações sem schedule não aparecem no mapMedicinesToCardsForDate
+    // Então vamos verificar diretamente nas medicines
+    if (selectedFilter === "not_scheduled") {
+      const medicinesWithoutSchedules = medicines.filter(
+        (med) => !med.schedules || med.schedules.length === 0
+      );
+      // Se não houver medicações sem schedule, retornar array vazio
+      if (medicinesWithoutSchedules.length === 0) {
+        return [];
+      }
+      // Caso contrário, não há como criar cards para elas sem schedule, então retornar vazio
+      return [];
+    }
+
+    // Apply filter based on selectedFilter
+    if (selectedFilter && selectedFilter !== "all") {
+      validCards = validCards.filter((card) => {
+        switch (selectedFilter) {
+          case "scheduled":
+            // Medicações agendadas - todas têm schedule (já filtradas pelo mapMedicinesToCardsForDate)
+            return true;
+          
+          case "completed":
+            // Medicações concluídas (tomadas)
+            return card.card.isCompleted === true;
+          
+          case "pending":
+            // Medicações pendentes (não tomadas e não puladas)
+            return !card.card.isCompleted && !card.card.isForgotten;
+          
+          case "nearest":
+            // Mais próximas - todas passam, vamos ordenar depois
+            return true;
+          
+          case "furthest":
+            // Mais distantes - todas passam, vamos ordenar depois
+            return true;
+          
+          default:
+            return true;
+        }
+      });
+
+      // Apply sorting for "nearest" and "furthest"
+      if (selectedFilter === "nearest") {
+        validCards = [...validCards].sort((a, b) => {
+          const timeA = a.card.scheduleLabel?.split(" - ")[0] || "";
+          const timeB = b.card.scheduleLabel?.split(" - ")[0] || "";
+          return timeA.localeCompare(timeB);
+        });
+      } else if (selectedFilter === "furthest") {
+        validCards = [...validCards].sort((a, b) => {
+          const timeA = a.card.scheduleLabel?.split(" - ")[0] || "";
+          const timeB = b.card.scheduleLabel?.split(" - ")[0] || "";
+          return timeB.localeCompare(timeA);
+        });
+      }
+    }
+
+    return validCards;
+  }, [medicines, selectedDateObj, selectedDateKey, doseOccurrences, selectedFilter]);
 
   const renderMedicinesList = () => {
     if (isLoading || isLoadingDoses) {
@@ -133,13 +195,18 @@ export default function Home({ isMemberApp = false }: HomeProps) {
     }
 
     if (medicinesForSelectedDate.length === 0) {
+      const filterLabel = filterOptions.find(
+        (opt) => opt.value === selectedFilter
+      )?.label;
       return (
         <StyledText
           color="muted"
           style={{ textAlign: "center", marginTop: 4 }}
           variant="mediumRegular"
         >
-          Nenhuma medicação para esta data.
+          {selectedFilter && selectedFilter !== "all"
+            ? `Nenhuma medicação encontrada para o filtro "${filterLabel}".`
+            : "Nenhuma medicação para esta data."}
         </StyledText>
       );
     }

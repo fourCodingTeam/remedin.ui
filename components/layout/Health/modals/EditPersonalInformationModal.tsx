@@ -1,9 +1,9 @@
 import { Pencil } from "lucide-react-native";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button, InputBase } from "@/components/ui";
 import { useToast } from "@/components/ui/Toast";
 import { useHealthData, useMemberContext } from "@/hooks";
-import { getMemberById, updatePerson } from "@/services/api/person";
+import { GetCurrentPerson, getMemberById, updatePerson } from "@/services/api/person";
 import { getAuthToken } from "@/services/utils/getAuthToken";
 import { useMemberStore } from "@/stores/MemberStore";
 import { useUserStore } from "@/stores/UserStore";
@@ -30,7 +30,7 @@ export function EditPersonalInformationModal({
     userId,
     setPersonData,
   } = useUserStore();
-  const { memberId } = useMemberContext();
+  const { memberId, isMemberContext } = useMemberContext();
   const { showToast } = useToast();
   const { reload: reloadHealthData } = useHealthData();
 
@@ -40,8 +40,118 @@ export function EditPersonalInformationModal({
   const [weightValue, setWeightValue] = useState("");
   const [heightValue, setHeightValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Load user data when modal opens
+  const loadMemberData = useCallback(async () => {
+    if (!member.id) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        showToast("Erro de autenticação", "error");
+        return;
+      }
+
+      const response = await getMemberById(member.id, token);
+      if (response.success && response.data) {
+        setName(response.data.name || member?.name || "");
+        setPhone(response.data.phone ?? member?.phoneNumber ?? "");
+        setEmailValue(response.data.email || "");
+        if (response.data.weightKg != null) {
+          setWeightValue(response.data.weightKg.toString());
+        } else if (weight > 0) {
+          setWeightValue(weight.toString());
+        } else {
+          setWeightValue("");
+        }
+        if (response.data.heightCm != null) {
+          setHeightValue(response.data.heightCm.toString());
+        } else if (height > 0) {
+          setHeightValue(height.toString());
+        } else {
+          setHeightValue("");
+        }
+      } else {
+        // Fallback to store values
+        setName(member?.name || "");
+        setPhone(member?.phoneNumber || "");
+        setEmailValue("");
+        setWeightValue(weight > 0 ? weight.toString() : "");
+        setHeightValue(height > 0 ? height.toString() : "");
+        showToast(
+          response.message || "Erro ao carregar dados do membro",
+          "error"
+        );
+      }
+    } catch (error) {
+      // Fallback to store values
+      setName(member?.name || "");
+      setPhone(member?.phoneNumber || "");
+      setEmailValue("");
+      setWeightValue(weight > 0 ? weight.toString() : "");
+      setHeightValue(height > 0 ? height.toString() : "");
+      showToast(
+        error instanceof Error
+          ? error.message
+          : "Erro ao carregar dados do membro",
+        "error"
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, [memberId, member, weight, height, showToast]);
+
+  const loadCurrentUserData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        showToast("Erro de autenticação", "error");
+        return;
+      }
+
+      const response = await GetCurrentPerson(token);
+      if (response.success && response.data) {
+        setName(response.data.name || username || "");
+        setPhone(response.data.phone ?? phoneNumber ?? "");
+        setEmailValue(response.data.email || email || "");
+        if (response.data.weightKg != null) {
+          setWeightValue(response.data.weightKg.toString());
+        } else if (weightKg != null) {
+          setWeightValue(weightKg.toString());
+        } else {
+          setWeightValue("");
+        }
+        if (response.data.heightCm != null) {
+          setHeightValue(response.data.heightCm.toString());
+        } else if (heightCm != null) {
+          setHeightValue(heightCm.toString());
+        } else {
+          setHeightValue("");
+        }
+      } else {
+        // Fallback to store values
+        setName(username || "");
+        setPhone(phoneNumber || "");
+        setEmailValue(email || "");
+        setWeightValue(weightKg != null ? weightKg.toString() : "");
+        setHeightValue(heightCm != null ? heightCm.toString() : "");
+      }
+    } catch {
+      // Silently fail - will use fallback values
+      setName(username || "");
+      setPhone(phoneNumber || "");
+      setEmailValue(email || "");
+      setWeightValue(weightKg != null ? weightKg.toString() : "");
+      setHeightValue(heightCm != null ? heightCm.toString() : "");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [username, email, phoneNumber, weightKg, heightCm, showToast]);
+
   useEffect(() => {
     if (!isVisible) {
       setName("");
@@ -52,73 +162,36 @@ export function EditPersonalInformationModal({
       return;
     }
 
-    const loadUserData = async () => {
-      if (memberId) {
-        // First set from store (if available), then try API to update
-        setName(member?.name || "");
-        setPhone(member?.phoneNumber || "");
-        setEmailValue("");
-        setWeightValue(weight > 0 ? weight.toString() : "");
-        setHeightValue(height > 0 ? height.toString() : "");
-
-        // Then load from API to get latest data
-        try {
-          const token = await getAuthToken();
-          if (token) {
-            const response = await getMemberById(memberId, token);
-            if (response.success && response.data) {
-              setName(response.data.name || member?.name || "");
-              setPhone(response.data.phone ?? member?.phoneNumber ?? "");
-              setEmailValue(response.data.email || "");
-              if (response.data.weightKg != null) {
-                setWeightValue(response.data.weightKg.toString());
-              }
-              if (response.data.heightCm != null) {
-                setHeightValue(response.data.heightCm.toString());
-              }
-            }
-          }
-        } catch {
-          // Ignore errors, keep store values
-        }
-      } else {
-        // Use user store data directly (loaded on login)
-        setName(username || "");
-        setPhone(phoneNumber || "");
-        setEmailValue(email || "");
-        setWeightValue(weightKg != null ? weightKg.toString() : "");
-        setHeightValue(heightCm != null ? heightCm.toString() : "");
-      }
-    };
-
-    loadUserData();
+    if (isVisible && member.id) {
+      console.log("member.id:", member.id);
+      loadMemberData();
+      reloadHealthData();
+    } else if (isVisible && !memberId) {
+      loadCurrentUserData();
+      reloadHealthData();
+    }
   }, [
     isVisible,
     memberId,
-    member,
-    username,
-    email,
-    phoneNumber,
-    weight,
-    height,
-    weightKg,
-    heightCm,
+    loadMemberData,
+    loadCurrentUserData,
+    reloadHealthData,
   ]);
 
   const handleConfirm = async () => {
-    setIsLoading(true);
+    setIsSaving(true);
     try {
       const token = await getAuthToken();
       if (!token) {
         showToast("Você precisa estar autenticado", "error");
-        setIsLoading(false);
+        setIsSaving(false);
         return;
       }
 
       const personIdToUpdate = memberId || userId;
       if (!personIdToUpdate) {
         showToast("Erro ao identificar usuário", "error");
-        setIsLoading(false);
+        setIsSaving(false);
         return;
       }
 
@@ -209,7 +282,7 @@ export function EditPersonalInformationModal({
         "error"
       );
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
     }
   };
 

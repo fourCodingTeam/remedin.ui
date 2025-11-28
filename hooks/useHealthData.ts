@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { useToast } from "@/components/ui/Toast";
 import {
+  VitalSignRecordDto,
+} from "@/services/@types/health";
+import {
   getLatestVitalSign,
   getVitalSigns,
-  type VitalSignRecordDto,
 } from "@/services/api/health";
 import { VitalSignType } from "@/services/@types/enums";
 import { getAuthToken } from "@/services/utils/getAuthToken";

@@ -20,11 +20,13 @@ export interface SnoozeDoseRequest {
 export async function markDoseTaken(
   doseId: string,
   request: MarkDoseTakenRequest,
-  token: string
+  token: string,
+  memberId?: string | null
 ): Promise<BaseResponse<boolean>> {
   try {
+    const memberIdParam = memberId ? `?memberId=${encodeURIComponent(memberId)}` : "";
     const response = await fetch(
-      `${API_BASE_URL}/MedicineAdherence/${doseId}/taken`,
+      `${API_BASE_URL}/MedicineAdherence/${doseId}/taken${memberIdParam}`,
       {
         method: "POST",
         headers: {
@@ -97,11 +99,13 @@ export async function markDoseTaken(
 export async function markDoseSkipped(
   doseId: string,
   request: MarkDoseSkippedRequest,
-  token: string
+  token: string,
+  memberId?: string | null
 ): Promise<BaseResponse<boolean>> {
   try {
+    const memberIdParam = memberId ? `?memberId=${encodeURIComponent(memberId)}` : "";
     const response = await fetch(
-      `${API_BASE_URL}/MedicineAdherence/${doseId}/skip`,
+      `${API_BASE_URL}/MedicineAdherence/${doseId}/skip${memberIdParam}`,
       {
         method: "POST",
         headers: {
@@ -137,11 +141,13 @@ export async function markDoseSkipped(
 export async function snoozeDose(
   doseId: string,
   request: SnoozeDoseRequest,
-  token: string
+  token: string,
+  memberId?: string | null
 ): Promise<BaseResponse<boolean>> {
   try {
+    const memberIdParam = memberId ? `?memberId=${encodeURIComponent(memberId)}` : "";
     const response = await fetch(
-      `${API_BASE_URL}/MedicineAdherence/${doseId}/snooze`,
+      `${API_BASE_URL}/MedicineAdherence/${doseId}/snooze${memberIdParam}`,
       {
         method: "POST",
         headers: {
@@ -276,7 +282,8 @@ export async function getDoseOccurrenceByMedicineScheduleAndDate(
   medicineId: string,
   scheduleId: string,
   date: Date,
-  token: string
+  token: string,
+  memberId?: string | null
 ): Promise<BaseResponse<DoseOccurrenceDto | null>> {
   try {
     // Validate date before formatting
@@ -313,7 +320,8 @@ export async function getDoseOccurrenceByMedicineScheduleAndDate(
       };
     }
 
-    const url = `${API_BASE_URL}/MedicineAdherence/by-medicine-schedule-date?medicineId=${encodeURIComponent(medicineId)}&scheduleId=${encodeURIComponent(scheduleId)}&date=${encodeURIComponent(dateStr)}`;
+    const memberIdParam = memberId ? `&memberId=${encodeURIComponent(memberId)}` : "";
+    const url = `${API_BASE_URL}/MedicineAdherence/by-medicine-schedule-date?medicineId=${encodeURIComponent(medicineId)}&scheduleId=${encodeURIComponent(scheduleId)}&date=${encodeURIComponent(dateStr)}${memberIdParam}`;
 
     const response = await fetch(url, {
       method: "GET",

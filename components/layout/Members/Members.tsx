@@ -10,7 +10,7 @@ import {
   sideMenuConfig,
 } from "@/constants/sideMenu.config";
 import { theme } from "@/constants/theme";
-import { getMembersByOwner } from "@/services/api/person";
+import { getMembersByOwner, getMemberById } from "@/services/api/person";
 import { memberMock } from "@/services/mock/memberMock";
 import { getAuthToken } from "@/services/utils/getAuthToken";
 import { useMemberStore } from "@/stores/MemberStore";
@@ -28,15 +28,11 @@ import type { MembersProps } from "./Members.types";
 
 export function Members({ isMemberApp = false }: MembersProps) {
   const [isNewMemberModalVisible, setIsNewMemberModalVisible] = useState(false);
-  const { username, phoneNumber } = useUserStore();
+  const { username, phoneNumber, userId } = useUserStore();
   const {
     setMember,
     member,
-    setWeight,
-    setHeight,
-    setBloodPressure,
-    setBloodSugar,
-    setAmountOfMedicine,
+    members,
   } = useMemberStore();
   const { showToast } = useToast();
   const [membersList, setMembersList] = useState<
@@ -59,9 +55,6 @@ export function Members({ isMemberApp = false }: MembersProps) {
     string | number | undefined
   >();
 
-  const { weight, height, bloodPressure, bloodSugar, amountOfMedicine } =
-    memberMock;
-
   const filterOptions = [
     { label: "Todos os membros", value: "all" },
     { label: "Membros ativos", value: "active" },
@@ -73,6 +66,19 @@ export function Members({ isMemberApp = false }: MembersProps) {
     try {
       const token = await getAuthToken();
       if (!token) {
+        return;
+      }
+
+      const membersFromStore = members;
+      if (membersFromStore.length > 0) {
+        setMembersList(
+          membersFromStore.map((m) => ({
+            id: m.id,
+            name: m.name,
+            email: m.email,
+          }))
+        );
+        setIsLoadingMembers(false);
         return;
       }
 
@@ -90,7 +96,7 @@ export function Members({ isMemberApp = false }: MembersProps) {
     } finally {
       setIsLoadingMembers(false);
     }
-  }, [showToast]);
+  }, [showToast, members]);
 
   useEffect(() => {
     if (!isMemberApp) {
@@ -98,7 +104,7 @@ export function Members({ isMemberApp = false }: MembersProps) {
     }
   }, [isMemberApp, loadMembers]);
 
-  const handleOpenMemberAppById = (memberData: {
+  const handleOpenMemberAppById = async (memberData: {
     id: string;
     name: string;
     email: string;
@@ -108,24 +114,52 @@ export function Members({ isMemberApp = false }: MembersProps) {
       return;
     }
 
-    // Converter GUID string para número simples usando hash (apenas para compatibilidade com MemberStore)
-    // O importante é que router.push usa o GUID correto
-    const numericId =
-      memberData.id
-        .split("")
-        .reduce((acc, char) => acc + char.charCodeAt(0), 0) % 1_000_000;
-
-    setMember({
-      id: numericId,
-      name: memberData.name,
-      phoneNumber: "",
-      avatar: "",
-    });
-    setWeight(weight);
-    setHeight(height);
-    setBloodPressure(bloodPressure);
-    setBloodSugar(bloodSugar);
-    setAmountOfMedicine(amountOfMedicine);
+    const fullMemberData = members.find((m) => m.id === memberData.id);
+    if (fullMemberData) {
+      setMember({
+        id: member.id,
+        name: fullMemberData.name,
+        phoneNumber: fullMemberData.phoneNumber || fullMemberData.phone || "",
+        avatar: fullMemberData.avatar || "",
+      });
+    } else {
+      try {
+        const token = await getAuthToken();
+        if (token) {
+          const response = await getMemberById(memberData.id, token);
+          if (response.success && response.data) {
+            setMember({
+              id: memberData.id,
+              name: response.data.name,
+              phoneNumber: response.data.phone || "",
+              avatar: "",
+            });
+          } else {
+            setMember({
+              id: memberData.id,
+              name: memberData.name,
+              phoneNumber: "",
+              avatar: "",
+            });
+          }
+        } else {
+          setMember({
+            id: memberData.id,
+            name: memberData.name,
+            phoneNumber: "",
+            avatar: "",
+          });
+        }
+      } catch {
+        setMember({
+          id: memberData.id,
+          name: memberData.name,
+          phoneNumber: "",
+          avatar: "",
+        });
+      }
+    }
+    
     router.push(`/member/${memberData.id}`);
   };
 
@@ -168,7 +202,7 @@ export function Members({ isMemberApp = false }: MembersProps) {
           />
           <MemberCard
             avatar={require("@/assets/images/adaptive-icon.png")}
-            id={1}
+            id={userId ?? ""}
             isUser
             name="Você"
             onPress={() => router.dismissTo("/(tabs)")}
@@ -244,18 +278,10 @@ export function Members({ isMemberApp = false }: MembersProps) {
               (memberData) => memberData.id && memberData.id.trim() !== ""
             )
             .map((memberData) => {
-              // Converter GUID string para número simples usando hash (apenas para compatibilidade com MemberCard)
-              const numericId = memberData.id
-                ? memberData.id
-                    .split("")
-                    .reduce((acc, char) => acc + char.charCodeAt(0), 0) %
-                  1_000_000
-                : 0;
-
               return (
                 <MemberCard
                   avatar={require("@/assets/images/adaptive-icon.png")}
-                  id={numericId}
+                  id={memberData.id}
                   key={memberData.id}
                   name={memberData.name || "Sem nome"}
                   onPress={() => handleOpenMemberAppById(memberData)}
