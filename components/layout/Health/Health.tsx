@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { signOut } from "@/auth/signOut";
 import { HealthInfoCard } from "@/components/ui";
@@ -49,13 +49,18 @@ export function Health({ isMemberApp = false }: HealthProps) {
   const { member, weight, height } = useMemberStore();
   const { username, phoneNumber, token, weightKg, heightCm } = useUserStore();
   const { memberId, isMemberContext } = useMemberContext();
+  
+  // Use memberId from context if available, otherwise use member.id (similar to Home.tsx)
+  const effectiveMemberId = isMemberApp ? (member.id || memberId) : memberId;
+  
   const {
     latestWeight,
     latestHeight,
     latestBloodPressure,
     latestBloodSugar,
+    isLoading: isLoadingHealth,
     reload: reloadHealth,
-  } = useHealthData();
+  } = useHealthData(effectiveMemberId);
 
   const displayHeight =
     latestHeight !== null
@@ -76,6 +81,8 @@ export function Health({ isMemberApp = false }: HealthProps) {
         : weightKg;
   const [medicinesCount, setMedicinesCount] = useState(0);
   const [isLoadingMedicines, setIsLoadingMedicines] = useState(false);
+  // Guardar o memberId que foi usado para carregar a contagem de medicamentos
+  const [loadedMedicinesMemberId, setLoadedMedicinesMemberId] = useState<string | null | undefined>(null);
   const [activeModal, setActiveModal] = useState<HealthModalKey | null>(null);
   const [isCalendarModalVisible, setIsCalendarModalVisible] = useState(false);
   const [isProfileModalVisible, setIsProfileModalVisible] = useState(false);
@@ -86,8 +93,13 @@ export function Health({ isMemberApp = false }: HealthProps) {
   const [isNotificationsModalVisible, setIsNotificationsModalVisible] =
     useState(false);
 
-  const loadMedicinesCount = useCallback(async () => {
+  const loadMedicinesCount = useCallback(async (forceReload = false) => {
     if (!token) {
+      return;
+    }
+
+    // Se o memberId for o mesmo e não for um reload forçado, não recarregar
+    if (!forceReload && effectiveMemberId === loadedMedicinesMemberId && loadedMedicinesMemberId !== null) {
       return;
     }
 
@@ -97,21 +109,31 @@ export function Health({ isMemberApp = false }: HealthProps) {
         token,
         1,
         1,
-        memberId || undefined
+        effectiveMemberId || undefined
       );
       if (response.success && response.data) {
         setMedicinesCount(response.data.totalCount || 0);
+        // Atualizar o memberId que foi usado para carregar
+        setLoadedMedicinesMemberId(effectiveMemberId);
       }
     } catch {
       // Silently fail - will show default value
     } finally {
       setIsLoadingMedicines(false);
     }
-  }, [token, memberId]);
+  }, [token, effectiveMemberId, loadedMedicinesMemberId]);
 
   useEffect(() => {
     loadMedicinesCount();
   }, [loadMedicinesCount]);
+
+  // Recarregar dados quando a página é focada (força reload mesmo se ID for o mesmo)
+  useFocusEffect(
+    useCallback(() => {
+      reloadHealth();
+      loadMedicinesCount(true);
+    }, [reloadHealth, loadMedicinesCount])
+  );
 
   const openModal = (modal: HealthModalKey) => {
     setActiveModal(modal);
@@ -241,6 +263,7 @@ export function Health({ isMemberApp = false }: HealthProps) {
               <HealthInfoCard
                 backgroundColor="secondary"
                 color="light"
+                isLoading={isLoadingHealth}
                 title="Peso"
                 type="weight"
                 unit="kg"
@@ -249,6 +272,7 @@ export function Health({ isMemberApp = false }: HealthProps) {
               <HealthInfoCard
                 backgroundColor="primary"
                 color="light"
+                isLoading={isLoadingHealth}
                 secondaryTextColor="dark"
                 textColor="dark"
                 title="Altura"
@@ -260,15 +284,18 @@ export function Health({ isMemberApp = false }: HealthProps) {
               <HealthInfoCard
                 backgroundColor="dark"
                 color="dark"
+                isLoading={isLoadingMedicines}
+                onPress={() => setIsMedicinesModalVisible(true)}
                 title="Remédios"
                 type="amountOfMedicine"
-                value={isLoadingMedicines ? "..." : medicinesCount.toString()}
+                value={medicinesCount.toString()}
               />
             </ThreeCardsWrapper>
             <TwoCardsWrapper>
               <HealthInfoCard
                 backgroundColor="light"
                 color="dark"
+                isLoading={isLoadingHealth}
                 title="Pressão Arterial"
                 type="bloodPressure"
                 unit="mmHg"
@@ -277,6 +304,7 @@ export function Health({ isMemberApp = false }: HealthProps) {
               <HealthInfoCard
                 backgroundColor="light"
                 color="dark"
+                isLoading={isLoadingHealth}
                 title="Glicose"
                 type="bloodSugar"
                 unit="mg/dL"
@@ -347,6 +375,7 @@ export function Health({ isMemberApp = false }: HealthProps) {
                 <HealthInfoCard
                   backgroundColor="secondary"
                   color="light"
+                  isLoading={isLoadingHealth}
                   title="Peso"
                   type="weight"
                   unit="kg"
@@ -357,6 +386,7 @@ export function Health({ isMemberApp = false }: HealthProps) {
                 <HealthInfoCard
                   backgroundColor="primary"
                   color="light"
+                  isLoading={isLoadingHealth}
                   secondaryTextColor="dark"
                   textColor="dark"
                   title="Altura"
@@ -370,15 +400,18 @@ export function Health({ isMemberApp = false }: HealthProps) {
                 <HealthInfoCard
                   backgroundColor="dark"
                   color="dark"
+                  isLoading={isLoadingMedicines}
+                  onPress={() => setIsMedicinesModalVisible(true)}
                   title="Remédios"
                   type="amountOfMedicine"
-                  value={isLoadingMedicines ? "..." : medicinesCount.toString()}
+                  value={medicinesCount.toString()}
                 />
               </ThreeCardsWrapper>
               <TwoCardsWrapper>
                 <HealthInfoCard
                   backgroundColor="light"
                   color="dark"
+                  isLoading={isLoadingHealth}
                   title="Pressão Arterial"
                   type="bloodPressure"
                   unit="mmHg"
@@ -387,6 +420,7 @@ export function Health({ isMemberApp = false }: HealthProps) {
                 <HealthInfoCard
                   backgroundColor="light"
                   color="dark"
+                  isLoading={isLoadingHealth}
                   title="Glicose"
                   type="bloodSugar"
                   unit="mg/dL"

@@ -11,9 +11,13 @@ import { VitalSignType } from "@/services/@types/enums";
 import { getAuthToken } from "@/services/utils/getAuthToken";
 import { useMemberContext } from "./useMemberContext";
 
-export function useHealthData() {
+export function useHealthData(memberIdOverride?: string | null) {
   const { showToast } = useToast();
-  const { memberId } = useMemberContext();
+  const { memberId: contextMemberId } = useMemberContext();
+  
+  // Usar memberId fornecido como parâmetro ou do contexto
+  const effectiveMemberId = memberIdOverride ?? contextMemberId;
+  
   const [latestWeight, setLatestWeight] = useState<number | null>(null);
   const [latestHeight, setLatestHeight] = useState<number | null>(null);
   const [latestBloodPressure, setLatestBloodPressure] = useState<string | null>(
@@ -24,9 +28,23 @@ export function useHealthData() {
   );
   const [isLoading, setIsLoading] = useState(false);
   const [vitalSigns, setVitalSigns] = useState<VitalSignRecordDto[]>([]);
+  // Guardar o memberId que foi usado para carregar os dados atuais
+  const [loadedMemberId, setLoadedMemberId] = useState<string | null | undefined>(null);
 
-  const loadHealthData = useCallback(async () => {
+  const loadHealthData = useCallback(async (forceReload = false) => {
+    // Se o memberId for o mesmo e não for um reload forçado, não recarregar
+    if (!forceReload && effectiveMemberId === loadedMemberId && loadedMemberId !== null) {
+      return;
+    }
+
     setIsLoading(true);
+    // Limpar dados anteriores antes de carregar novos
+    setLatestWeight(null);
+    setLatestHeight(null);
+    setLatestBloodPressure(null);
+    setLatestBloodSugar(null);
+    setVitalSigns([]);
+    
     try {
       const token = await getAuthToken();
       if (!token) {
@@ -37,7 +55,7 @@ export function useHealthData() {
       const weightResponse = await getLatestVitalSign(
         VitalSignType.Weight,
         token,
-        memberId || undefined
+        effectiveMemberId || undefined
       );
       if (weightResponse.success && weightResponse.data) {
         setLatestWeight(weightResponse.data.value);
@@ -47,7 +65,7 @@ export function useHealthData() {
       const heightResponse = await getLatestVitalSign(
         VitalSignType.Height,
         token,
-        memberId || undefined
+        effectiveMemberId || undefined
       );
       if (heightResponse.success && heightResponse.data) {
         setLatestHeight(heightResponse.data.value);
@@ -57,7 +75,7 @@ export function useHealthData() {
       const bpResponse = await getLatestVitalSign(
         VitalSignType.BloodPressure,
         token,
-        memberId || undefined
+        effectiveMemberId || undefined
       );
       if (bpResponse.success && bpResponse.data) {
         const systolic = bpResponse.data.value;
@@ -71,17 +89,20 @@ export function useHealthData() {
       const sugarResponse = await getLatestVitalSign(
         VitalSignType.BloodSugar,
         token,
-        memberId || undefined
+        effectiveMemberId || undefined
       );
       if (sugarResponse.success && sugarResponse.data) {
         setLatestBloodSugar(sugarResponse.data.value);
       }
 
       // Load all vital signs for history
-      const allResponse = await getVitalSigns(token, memberId || undefined);
+      const allResponse = await getVitalSigns(token, effectiveMemberId || undefined);
       if (allResponse.success && allResponse.data) {
         setVitalSigns(allResponse.data);
       }
+
+      // Atualizar o memberId que foi usado para carregar
+      setLoadedMemberId(effectiveMemberId);
     } catch (error) {
       showToast(
         error instanceof Error
@@ -92,11 +113,17 @@ export function useHealthData() {
     } finally {
       setIsLoading(false);
     }
-  }, [showToast, memberId]);
+  }, [showToast, effectiveMemberId, loadedMemberId]);
 
+  // Função de reload que força o recarregamento
+  const reloadHealthData = useCallback(() => {
+    loadHealthData(true);
+  }, [loadHealthData]);
+
+  // Recarregar quando effectiveMemberId mudar
   useEffect(() => {
     loadHealthData();
-  }, [loadHealthData]);
+  }, [loadHealthData, effectiveMemberId]);
 
   return {
     latestWeight,
@@ -105,7 +132,7 @@ export function useHealthData() {
     latestBloodSugar,
     vitalSigns,
     isLoading,
-    reload: loadHealthData,
+    reload: reloadHealthData,
   };
 }
 

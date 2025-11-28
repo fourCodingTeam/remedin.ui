@@ -60,8 +60,9 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
-  const { isLoggedIn, token } = useUserStore();
-  const isAuthenticated = isLoggedIn || !!token;
+  const { isLoggedIn, token, needsRegistration } = useUserStore();
+  // Only consider authenticated if logged in AND doesn't need registration
+  const isAuthenticated = (isLoggedIn || !!token) && !needsRegistration;
 
   // Initialize websocket notifications when authenticated
   useWebSocketNotifications();

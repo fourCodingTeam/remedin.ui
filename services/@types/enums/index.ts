@@ -1,4 +1,5 @@
 export * from "./dosageUnit.enum";
+export * from "./doseStatus.enum";
 export * from "./frequencyType.enum";
 export * from "./medicineScheduleType.enum";
 export * from "./vitalSignType.enum";

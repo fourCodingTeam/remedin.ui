@@ -4,7 +4,7 @@ export type PersonRequest = {
   name: string;
   userName: string;
   phone: string;
-  birthDate: Date;
+  birthDate: Date | null;
   weightKg?: number | null;
   heightCm?: number | null;
 };

@@ -21,8 +21,12 @@ import {
 } from "../AuthModal.styles";
 import type { AuthLoginProps } from "../AuthModal.types";
 
-export function AuthLogin({ onClose, onGoogleLogin }: AuthLoginProps) {
-  const { setIsLoggedIn, setUsername, setEmail, setToken, setPersonData } =
+export function AuthLogin({
+  onClose,
+  onGoogleLogin,
+  onPersonNotFound,
+}: AuthLoginProps) {
+  const { setIsLoggedIn, setUsername, setEmail, setToken, setPersonData, setNeedsRegistration } =
     useUserStore();
   const { setMembers } = useMemberStore();
   const { showToast } = useToast();
@@ -50,12 +54,16 @@ export function AuthLogin({ onClose, onGoogleLogin }: AuthLoginProps) {
       const response = await signInWithEmail(data.email, data.password);
       const token = response.session.access_token;
 
-      setToken(token);
+      // Don't set token yet - wait until person is found or registration is complete
       setEmail(data.email);
 
       // Get person data from backend
       const personResponse = await GetCurrentPerson(token);
+      
       if (personResponse.success && personResponse.data) {
+        // Person found - set token and login
+        setToken(token);
+        setNeedsRegistration(false); // Clear registration flag
         setPersonData({
           id: personResponse.data.id,
           name: personResponse.data.name,
@@ -66,27 +74,36 @@ export function AuthLogin({ onClose, onGoogleLogin }: AuthLoginProps) {
           weightKg: personResponse.data.weightKg,
           heightCm: personResponse.data.heightCm,
         });
+
+        // Load all members with full data
+        const membersResponse = await loadAllMembersWithFullData(token);
+        if (membersResponse.success && membersResponse.data) {
+          const membersWithPhone = membersResponse.data.map((member) => ({
+            ...member,
+            phoneNumber: member.phone || "",
+            avatar: "",
+          }));
+          setMembers(membersWithPhone);
+        }
+
+        setIsLoggedIn(true);
+        showToast("Login realizado com sucesso!", "success");
+        onClose();
       } else {
-        // Fallback to metadata if backend call fails
-        setUsername(
-          response.user.user_metadata.username || response.user.email || null
-        );
+        // Pessoa não encontrada - mostrar modal de cadastro completo
+        console.log("Person not found, calling onPersonNotFound:", personResponse);
+        // Set token but mark as needing registration to prevent auto-redirect
+        setToken(token);
+        setNeedsRegistration(true);
+        const displayName =
+          response.user.user_metadata?.username ||
+          response.user.email ||
+          null;
+        setUsername(displayName);
+        // Call the callback to show registration modal (don't close login modal here)
+        onPersonNotFound?.(data.email, token);
+        // Don't call onClose() here - let the parent handle closing the login modal
       }
-
-      // Load all members with full data
-      const membersResponse = await loadAllMembersWithFullData(token);
-      if (membersResponse.success && membersResponse.data) {
-        const membersWithPhone = membersResponse.data.map((member) => ({
-          ...member,
-          phoneNumber: member.phone || "",
-          avatar: "",
-        }));
-        setMembers(membersWithPhone);
-      }
-
-      setIsLoggedIn(true);
-      showToast("Login realizado com sucesso!", "success");
-      onClose();
     } catch (error) {
       const errorMessage =
         error instanceof Error

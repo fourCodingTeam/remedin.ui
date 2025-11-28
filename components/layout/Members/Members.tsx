@@ -39,6 +39,7 @@ export function Members({ isMemberApp = false }: MembersProps) {
       id: string;
       name: string;
       email: string;
+      phoneNumber: string;
     }>
   >([]);
   const [isLoadingMembers, setIsLoadingMembers] = useState(false);
@@ -75,6 +76,7 @@ export function Members({ isMemberApp = false }: MembersProps) {
             id: m.id,
             name: m.name,
             email: m.email,
+            phoneNumber: m.phoneNumber || m.phone || "",
           }))
         );
         setIsLoadingMembers(false);
@@ -83,7 +85,12 @@ export function Members({ isMemberApp = false }: MembersProps) {
 
       const response = await getMembersByOwner(token);
       if (response.success && response.data) {
-        setMembersList(response.data);
+        setMembersList(response.data.map((m) => ({
+          id: m.id,
+          name: m.name,
+          email: m.email,
+          phoneNumber: m.phoneNumber,
+        })));
       } else {
         showToast(response.message || "Erro ao carregar membros", "error");
       }
@@ -295,7 +302,7 @@ export function Members({ isMemberApp = false }: MembersProps) {
                   key={memberData.id}
                   name={memberData.name || "Sem nome"}
                   onPress={() => handleOpenMemberAppById(memberData)}
-                  phoneNumber=""
+                  phoneNumber={memberData.phoneNumber}
                 />
               );
             })}

@@ -1,4 +1,4 @@
-import { dosageUnitLabels } from "@/services/@types/enums";
+import { dosageUnitLabels, DoseStatus, parseDoseStatus } from "@/services/@types/enums";
 import type { DoseOccurrenceDto } from "@/services/api/medicineAdherence";
 import type { MedicineDtoResponse } from "@/services/@types/medicine";
 import type { ScheduleDtoResponse } from "@/services/@types/schedule";
@@ -223,18 +223,31 @@ export function enrichCardsWithDoseStatus(
     const dateKey = card.date;
 
     // Find matching dose occurrence by medicineId, scheduleId, and date
+    let matchingOccurrence: DoseOccurrenceDto | undefined;
+    
+    // Tentar encontrar com a chave completa primeiro
     const key = `${medicineId}|${scheduleId}|${dateKey}`;
-    const matchingOccurrence = occurrenceMap.get(key);
+    matchingOccurrence = occurrenceMap.get(key);
+    
+    // Se não encontrou, tentar buscar por medicineId e scheduleId apenas (caso a data não bata exatamente)
+    if (!matchingOccurrence) {
+      for (const [mapKey, occurrence] of occurrenceMap.entries()) {
+        if (mapKey.startsWith(`${medicineId}|${scheduleId}|`)) {
+          matchingOccurrence = occurrence;
+          break;
+        }
+      }
+    }
 
     const enrichedCard = { ...card };
     const baseCard = card.card || {};
     
     if (!matchingOccurrence) {
-      // Se não há ocorrência, definir como pendente
+      // Se não há ocorrência, definir como pendente e GARANTIR que não está marcado
       enrichedCard.card = {
         ...baseCard,
-        checked: false,
-        isCompleted: false,
+        checked: false, // FORÇAR false
+        isCompleted: false, // FORÇAR false
         isForgotten: false,
         statusLabel: "Pendente",
         tone: "secondary",
@@ -242,49 +255,78 @@ export function enrichCardsWithDoseStatus(
       return enrichedCard;
     }
 
-    const status = matchingOccurrence.status;
+    // Parse status usando o enum e helper function
+    // O backend retorna status como string via Status.ToString():
+    // - "Taken" (enum value = 2)
+    // - "Skipped" (enum value = 3)  
+    // - "Pending" (enum value = 1)
+    // - "Expired" (enum value = 4)
+    const status = parseDoseStatus(matchingOccurrence.status);
     
-    if (status === "Taken") {
-      enrichedCard.card = {
-        ...baseCard,
-        value: baseCard.value, // Preserve value
-        title: baseCard.title,
-        scheduleLabel: baseCard.scheduleLabel,
-        extraLines: baseCard.extraLines,
-        checked: true,
-        isCompleted: true,
-        isForgotten: false,
-        statusLabel: "Tomada",
-        tone: "primary",
-      };
-    } else if (status === "Skipped") {
-      enrichedCard.card = {
-        ...baseCard,
-        value: baseCard.value, // Preserve value
-        title: baseCard.title,
-        scheduleLabel: baseCard.scheduleLabel,
-        extraLines: baseCard.extraLines,
-        checked: false,
-        isCompleted: false,
-        isForgotten: true,
-        statusLabel: "Pulada",
-        tone: "danger",
-      };
-    } else if (status === "Pending") {
-      enrichedCard.card = {
-        ...baseCard,
-        value: baseCard.value, // Preserve value
-        title: baseCard.title,
-        scheduleLabel: baseCard.scheduleLabel,
-        extraLines: baseCard.extraLines,
-        checked: false,
-        isCompleted: false,
-        isForgotten: false,
-        statusLabel: "Pendente",
-        tone: "secondary",
-      };
+    // Aplicar estilos baseado no status do enum
+    switch (status) {
+      case DoseStatus.Taken:
+        enrichedCard.card = {
+          ...baseCard,
+          value: baseCard.value, // Preserve value
+          title: baseCard.title,
+          scheduleLabel: baseCard.scheduleLabel,
+          extraLines: baseCard.extraLines,
+          checked: true, // Marcado como tomada
+          isCompleted: true, // Completada
+          isForgotten: false,
+          statusLabel: "Tomada",
+          tone: "primary", // Estilo primary (verde/azul)
+        };
+        return enrichedCard;
+        
+      case DoseStatus.Skipped:
+        enrichedCard.card = {
+          ...baseCard,
+          value: baseCard.value, // Preserve value
+          title: baseCard.title,
+          scheduleLabel: baseCard.scheduleLabel,
+          extraLines: baseCard.extraLines,
+          checked: false,
+          isCompleted: false,
+          isForgotten: true, // Marcada como pulada
+          statusLabel: "Pulada",
+          tone: "danger", // Estilo danger (vermelho)
+        };
+        return enrichedCard;
+        
+      case DoseStatus.Expired:
+        enrichedCard.card = {
+          ...baseCard,
+          value: baseCard.value, // Preserve value
+          title: baseCard.title,
+          scheduleLabel: baseCard.scheduleLabel,
+          extraLines: baseCard.extraLines,
+          checked: false,
+          isCompleted: false,
+          isForgotten: true, // Expirou (tratado como esquecida)
+          statusLabel: "Expirada",
+          tone: "danger", // Estilo danger (vermelho)
+        };
+        return enrichedCard;
+        
+      case DoseStatus.Pending:
+      default:
+        // Default para Pending
+        enrichedCard.card = {
+          ...baseCard,
+          value: baseCard.value, // Preserve value
+          title: baseCard.title,
+          scheduleLabel: baseCard.scheduleLabel,
+          extraLines: baseCard.extraLines,
+          checked: false,
+          isCompleted: false,
+          isForgotten: false,
+          statusLabel: "Pendente",
+          tone: "secondary", // Estilo secondary (cinza)
+        };
+        return enrichedCard;
     }
 
-    return enrichedCard;
   });
 }

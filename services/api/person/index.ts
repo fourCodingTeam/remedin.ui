@@ -8,41 +8,52 @@ import type { PersonRequest, PersonResponse } from "@/services/@types/person";
 async function safeJsonParse<T>(
   response: Response
 ): Promise<{ success: boolean; data?: T; error?: string }> {
-  const contentType = response.headers.get("content-type");
-  const hasJsonContent = contentType?.includes("application/json");
-
-  if (!hasJsonContent) {
-    const text = await response.text();
-    return {
-      success: false,
-      error: `Resposta inválida do servidor: ${text.substring(0, 100)}`,
-    };
-  }
-
   try {
+    // Clone the response to avoid consuming the body
+    const contentType = response.headers.get("content-type");
+    const hasJsonContent = contentType?.includes("application/json");
+
+    // Read the text once
     const text = await response.text();
+    
+    if (!hasJsonContent) {
+      return {
+        success: false,
+        error: `Resposta inválida do servidor: ${text.substring(0, 100)}`,
+      };
+    }
+
     if (!text || text.trim() === "") {
       return {
         success: false,
         error: "Resposta vazia do servidor",
       };
     }
-    const data = JSON.parse(text) as T;
-    return {
-      success: true,
-      data,
-    };
-  } catch (parseError) {
+
+    // Try to parse as JSON
+    try {
+      const data = JSON.parse(text) as T;
+      return {
+        success: true,
+        data,
+      };
+    } catch (parseError) {
+      return {
+        success: false,
+        error: `Erro ao processar JSON: ${parseError instanceof Error ? parseError.message : "Resposta inválida"}. Texto: ${text.substring(0, 200)}`,
+      };
+    }
+  } catch (error) {
     return {
       success: false,
-      error: `Erro ao processar resposta do servidor: ${parseError instanceof Error ? parseError.message : "Resposta inválida"}`,
+      error: `Erro ao ler resposta: ${error instanceof Error ? error.message : "Erro desconhecido"}`,
     };
   }
 }
 
 export async function registerPerson(
   request: PersonRequest
-): Promise<BaseResponse> {
+): Promise<BaseResponse<PersonResponse>> {
   try {
     const response = await fetch(`${API_BASE_URL}/Person`, {
       method: "POST",
@@ -58,29 +69,8 @@ export async function registerPerson(
         birthDate: request.birthDate,
         weightKg: request.weightKg,
         heightCm: request.heightCm,
+        isMember: false,
       }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to create resident: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data as BaseResponse;
-  } catch (error) {
-    throw new Error(`Failed to create resident ${error}`);
-  }
-}
-
-export async function GetCurrentPerson(
-  token: string
-): Promise<BaseResponse<PersonResponse>> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/Person`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
     });
 
     const parseResult =
@@ -111,7 +101,85 @@ export async function GetCurrentPerson(
         success: false,
         code: response.status,
         message:
-          data.message ||
+          data.message || `Erro ao completar cadastro (${response.status})`,
+        data: undefined,
+      };
+    }
+
+    return data;
+  } catch (error) {
+    return {
+      success: false,
+      code: 0,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Erro ao completar cadastro",
+      data: undefined,
+    };
+  }
+}
+
+export async function GetCurrentPerson(
+  token: string
+): Promise<BaseResponse<PersonResponse>> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/Person`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    // Parse the response (works for both success and error cases)
+    const parseResult =
+      await safeJsonParse<BaseResponse<PersonResponse>>(response);
+
+    // 404 means person not found - this is expected for new users
+    if (response.status === 404) {
+      if (parseResult.success && parseResult.data) {
+        return {
+          success: false,
+          code: response.status,
+          message: parseResult.data.message || "Person not found. Please complete your registration.",
+          data: undefined,
+        };
+      }
+      // If parsing failed, return default message
+      return {
+        success: false,
+        code: response.status,
+        message: parseResult.error || "Person not found. Please complete your registration.",
+        data: undefined,
+      };
+    }
+
+    if (!parseResult.success) {
+      return {
+        success: false,
+        code: response.status,
+        message: parseResult.error || "Erro ao processar resposta",
+        data: undefined,
+      };
+    }
+
+    if (!parseResult.data) {
+      return {
+        success: false,
+        code: response.status,
+        message: "Dados não encontrados na resposta",
+        data: undefined,
+      };
+    }
+
+    const data = parseResult.data;
+
+    if (!response.ok) {
+      return {
+        success: false,
+        code: response.status,
+        message:
+          data?.message ||
           `Erro ao buscar dados do usuário (${response.status})`,
         data: undefined,
       };
@@ -135,6 +203,7 @@ export type MemberResponse = {
   id: string;
   name: string;
   email: string;
+  phoneNumber: string;
 };
 
 // Backend response format (PersonResponseDTO from API - camelCase due to JsonNamingPolicy)
@@ -182,11 +251,13 @@ function mapBackendMemberToFrontend(
   const id = backendAny.id || backendAny.Id;
   const name = backendAny.name || backendAny.Name;
   const email = backendAny.email || backendAny.Email;
+  const phoneNumber = backendAny.phone || backendAny.Phone;
 
   return {
     id: id?.toString() || "",
     name: name || "",
     email: email || "",
+    phoneNumber: phoneNumber || "",
   };
 }
 

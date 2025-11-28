@@ -27,4 +27,6 @@ export type HealthInfoCardProps = {
   secondaryTextColor?: StyledTextColor;
   valueTextColor?: StyledTextColor;
   borderColor?: HealthInfoCardColor;
+  isLoading?: boolean;
+  onPress?: () => void;
 };

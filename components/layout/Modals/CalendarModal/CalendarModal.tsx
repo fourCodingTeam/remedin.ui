@@ -6,6 +6,7 @@ import {
   StyledText,
 } from "@/components/ui/Common";
 import { Calendar } from "@/components/ui/Common/Calendar";
+import { useToast } from "@/components/ui/Toast";
 import { useDoseOccurrencesForDate } from "@/hooks/useDoseOccurrencesForDate";
 import { useMemberContext } from "@/hooks/useMemberContext";
 import { useMedicines } from "@/hooks/useMedicines";
@@ -16,6 +17,7 @@ import {
   mapMedicinesToCardsForDate,
 } from "@/utils/medicine/medicineCardMapper";
 import { ModalPageWrapper } from "../../Common/ModalPageWrapper";
+import { MedicineAdherenceModal } from "../MedicineAdherenceModal/MedicineAdherenceModal";
 import { ButtonsWrapper } from "../../styles";
 import {
   MedicationTimeLineItem,
@@ -30,23 +32,36 @@ function normalizeDate(date: Date): Date {
 
 export function CalendarModal({ isVisible, onClose }: CalendarModalProps) {
   const { memberId } = useMemberContext();
+  const { showToast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>(() =>
     normalizeDate(new Date())
   );
   const [currentDate, setCurrentDate] = useState<Date>(() =>
     normalizeDate(new Date())
   );
+  const [isMedicineAdherenceModalVisible, setIsMedicineAdherenceModalVisible] =
+    useState(false);
+  const [selectedMedicineId, setSelectedMedicineId] = useState<string | null>(
+    null
+  );
+  const [selectedScheduleId, setSelectedScheduleId] = useState<string | null>(
+    null
+  );
+  const [selectedDateForModal, setSelectedDateForModal] = useState<Date | null>(
+    null
+  );
   const { medicines, isLoading, reloadMedicines } = useMedicines(memberId);
   
   // Fetch dose occurrences for selected date
-  const { doseOccurrences, isLoading: isLoadingDoses } =
+  const { doseOccurrences, isLoading: isLoadingDoses, reload: reloadDoses } =
     useDoseOccurrencesForDate(selectedDate, memberId);
 
   useEffect(() => {
     if (isVisible) {
       reloadMedicines();
+      reloadDoses();
     }
-  }, [isVisible, reloadMedicines]);
+  }, [isVisible, reloadMedicines, reloadDoses]);
 
   const handleSelectDate = (date: Date) => {
     const normalized = normalizeDate(date);
@@ -111,20 +126,48 @@ export function CalendarModal({ isVisible, onClose }: CalendarModalProps) {
           {hour}
         </StyledText>
         <MedicinesStack>
-          {medicinesList.map((medicine) => (
-            <MedicineCheckboxCard
-              checked={medicine.card.checked}
-              extraLines={medicine.card.extraLines}
-              isCompleted={medicine.card.isCompleted}
-              isForgotten={medicine.card.isForgotten}
-              key={medicine.id}
-              scheduleLabel={medicine.card.scheduleLabel}
-              statusLabel={medicine.card.statusLabel}
-              title={medicine.card.title}
-              tone={medicine.card.tone}
-              value={medicine.card.value}
-            />
-          ))}
+          {medicinesList.map((medicine) => {
+            const separator = "|";
+            const parts = medicine.card.value.split(separator);
+            if (parts.length !== 2) {
+              return null;
+            }
+            const [medicineId, scheduleId] = parts;
+            const cardDate = getDateFromKey(medicine.date);
+
+            return (
+              <MedicineCheckboxCard
+                checked={medicine.card.checked}
+                extraLines={medicine.card.extraLines}
+                isCompleted={medicine.card.isCompleted}
+                isForgotten={medicine.card.isForgotten}
+                key={medicine.id}
+                scheduleLabel={medicine.card.scheduleLabel}
+                statusLabel={medicine.card.statusLabel}
+                title={medicine.card.title}
+                tone={medicine.card.tone}
+                value={medicine.card.value}
+                onPress={() => {
+                  // Verificar se a data é futura
+                  const today = normalizeDate(new Date());
+                  const cardDateOnly = normalizeDate(cardDate);
+
+                  if (cardDateOnly > today) {
+                    showToast(
+                      "Não é possível alterar o status de medicações futuras",
+                      "info"
+                    );
+                    return;
+                  }
+
+                  setSelectedMedicineId(medicineId);
+                  setSelectedScheduleId(scheduleId);
+                  setSelectedDateForModal(cardDate);
+                  setIsMedicineAdherenceModalVisible(true);
+                }}
+              />
+            );
+          })}
         </MedicinesStack>
       </MedicationTimeLineItem>
     ));
@@ -152,6 +195,20 @@ export function CalendarModal({ isVisible, onClose }: CalendarModalProps) {
       <ButtonsWrapper addPadding>
         <Button label="Cancelar" onPress={onClose} variant="outline" />
       </ButtonsWrapper>
+      {selectedMedicineId && selectedScheduleId && selectedDateForModal && (
+        <MedicineAdherenceModal
+          date={selectedDateForModal}
+          isVisible={isMedicineAdherenceModalVisible}
+          medicineId={selectedMedicineId}
+          onClose={() => {
+            setIsMedicineAdherenceModalVisible(false);
+            setSelectedDateForModal(null);
+            reloadMedicines();
+            reloadDoses();
+          }}
+          scheduleId={selectedScheduleId}
+        />
+      )}
     </ModalPageWrapper>
   );
 }

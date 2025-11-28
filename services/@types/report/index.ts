@@ -23,12 +23,40 @@ export type ScheduleReportItem = {
   weekDays: string[];
 };
 
+export type VitalSignRecordItem = {
+  id: string;
+  type: number; // VitalSignType enum
+  value: number;
+  unit: string | null;
+  secondaryValue: number | null; // For blood pressure (diastolic)
+  recordedAt: string; // ISO DateTime
+  notes: string | null;
+};
+
+export type SymptomRecordItem = {
+  id: string;
+  symptoms: string;
+  severity: number | null; // 1-10 scale
+  recordedAt: string; // ISO DateTime
+  notes: string | null;
+};
+
 export type VitalSignsReportData = {
   weightKg?: number;
   heightCm?: number;
-  bloodPressure?: string;
-  bloodSugar?: number;
+  bloodPressure?: string; // Última pressão (mantido para compatibilidade)
+  bloodSugar?: number; // Última glicose (mantido para compatibilidade)
   lastUpdated?: string;
+  // Histórico de registros
+  bloodPressureRecords?: VitalSignRecordItem[];
+  bloodSugarRecords?: VitalSignRecordItem[];
+  weightRecords?: VitalSignRecordItem[];
+  heightRecords?: VitalSignRecordItem[];
+};
+
+export type SymptomsReportData = {
+  symptoms: SymptomRecordItem[];
+  totalSymptoms: number;
 };
 
 export type MedicinesReportData = {
@@ -41,6 +69,7 @@ export type MedicinesReportData = {
 export type CompleteReportData = {
   medicines: MedicinesReportData;
   vitalSigns: VitalSignsReportData;
+  symptoms?: SymptomsReportData;
   overallAdherenceRate: number;
 };
 
@@ -50,5 +79,6 @@ export type ReportDtoResponse = {
   endDate: string;
   medicinesData?: MedicinesReportData;
   vitalSignsData?: VitalSignsReportData;
+  symptomsData?: SymptomsReportData;
   completeData?: CompleteReportData;
 };

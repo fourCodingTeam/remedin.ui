@@ -9,6 +9,7 @@ export function AuthModal({
   mode,
   onClose,
   onGoogleLogin,
+  onPersonNotFound,
 }: AuthModalProps) {
   return (
     <Modal
@@ -19,7 +20,11 @@ export function AuthModal({
     >
       <ModalView>
         {mode === "login" ? (
-          <AuthLogin onClose={onClose} onGoogleLogin={onGoogleLogin} />
+          <AuthLogin
+            onClose={onClose}
+            onGoogleLogin={onGoogleLogin}
+            onPersonNotFound={onPersonNotFound}
+          />
         ) : (
           <AuthRegister onClose={onClose} />
         )}

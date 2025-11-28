@@ -1,3 +1,4 @@
+import { ActivityIndicator } from "react-native";
 import { theme } from "@/constants/theme";
 import { StyledText } from "../Common/StyledText";
 import type { StyledTextColor } from "../Common/StyledText/StyledText.types";
@@ -120,6 +121,8 @@ export function HealthInfoCard({
   valueTextColor,
   borderColor,
   type,
+  isLoading = false,
+  onPress,
 }: HealthInfoCardProps) {
   const defaults = typeStyleDefaults[type];
 
@@ -152,6 +155,8 @@ export function HealthInfoCard({
     <CardWrapper
       backgroundColor={resolvedBackground}
       borderColor={resolvedBorderColor}
+      onPress={onPress}
+      disabled={!onPress}
     >
       <CardHeader>
         <StyledText color={titleColorToken} variant="mediumRegular">
@@ -165,14 +170,23 @@ export function HealthInfoCard({
       </CardHeader>
 
       <ValueContainer>
-        <StyledText color={valueColorToken} variant="largeBold">
-          {value}
-        </StyledText>
-        {unit ? (
-          <StyledText color={unitColorToken} variant="mediumRegular">
-            {unit}
-          </StyledText>
-        ) : null}
+        {isLoading ? (
+          <ActivityIndicator
+            color={styledTextPalette[valueColorToken]}
+            size="small"
+          />
+        ) : (
+          <>
+            <StyledText color={valueColorToken} variant="largeBold">
+              {value}
+            </StyledText>
+            {unit ? (
+              <StyledText color={unitColorToken} variant="mediumRegular">
+                {unit}
+              </StyledText>
+            ) : null}
+          </>
+        )}
       </ValueContainer>
     </CardWrapper>
   );

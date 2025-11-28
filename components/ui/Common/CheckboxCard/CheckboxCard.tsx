@@ -54,8 +54,8 @@ const toneConfigMap: Record<CheckboxCardTone, ToneStateConfig> = {
       border: theme.colors.accent.primary,
       checkboxBorder: theme.colors.accent.primary,
       checkboxBackground: theme.colors.background.light,
-      textColor: "light",
-      secondaryTextColor: "light",
+      textColor: "dark",
+      secondaryTextColor: "dark",
     },
   },
   secondary: {

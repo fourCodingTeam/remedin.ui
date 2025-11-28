@@ -24,6 +24,8 @@ export const useUserStore = create<UserState>((set) => ({
   setIsLoggedIn: (isLoggedIn: boolean) => set({ isLoggedIn }),
   isLoggingIn: false,
   setIsLoggingIn: (isLoggingIn: boolean) => set({ isLoggingIn }),
+  needsRegistration: false,
+  setNeedsRegistration: (needsRegistration: boolean) => set({ needsRegistration }),
   signOut: () =>
     set(() => ({
       userId: null,
@@ -37,6 +39,7 @@ export const useUserStore = create<UserState>((set) => ({
       heightCm: null,
       isLoggedIn: false,
       isLoggingIn: false,
+      needsRegistration: false,
     })),
   setPersonData: (person: {
     id: string;

@@ -10,10 +10,27 @@ const formatDate = (dateString: string): string => {
   return date.toLocaleDateString("pt-BR");
 };
 
-const formatTime = (timeString: string): string => {
+const formatTime = (timeString: string | undefined | null): string => {
+  if (!timeString) {
+    return "Horário não definido";
+  }
   // Assume formato HH:mm:ss ou HH:mm
   const parts = timeString.split(":");
+  if (parts.length < 2) {
+    return timeString;
+  }
   return `${parts[0]}:${parts[1]}`;
+};
+
+const formatDateTime = (dateTimeString: string): string => {
+  const date = new Date(dateTimeString);
+  return date.toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 };
 
 const getDosageUnitLabel = (dosageUnit: string | number): string => {
@@ -132,9 +149,9 @@ const generateMedicinesSection = (data: ReportDtoResponse): string => {
                   .map(
                     (schedule) => `
                   <li style="margin-bottom: 5px;">
-                    ${formatTime(schedule.scheduledTime)} - 
-                    ${getFrequencyTypeLabel(schedule.frequencyType)}
-                    ${schedule.weekDays.length > 0 ? ` (${getWeekDaysLabel(schedule.weekDays)})` : ""}
+                    ${formatTime(schedule.scheduledTime || undefined)} - 
+                    ${getFrequencyTypeLabel(schedule.frequencyType || "")}
+                    ${schedule.weekDays && schedule.weekDays.length > 0 ? ` (${getWeekDaysLabel(schedule.weekDays)})` : ""}
                   </li>
                 `
                   )
@@ -158,8 +175,17 @@ const generateVitalSignsSection = (data: ReportDtoResponse): string => {
     return "";
   }
 
-  const { weightKg, heightCm, bloodPressure, bloodSugar, lastUpdated } =
-    data.vitalSignsData;
+  const {
+    weightKg,
+    heightCm,
+    bloodPressure,
+    bloodSugar,
+    lastUpdated,
+    bloodPressureRecords,
+    bloodSugarRecords,
+    weightRecords,
+    heightRecords,
+  } = data.vitalSignsData;
 
   let html = `
     <div style="margin-top: 30px;">
@@ -170,25 +196,173 @@ const generateVitalSignsSection = (data: ReportDtoResponse): string => {
       <div style="margin-top: 20px; padding: 15px; background-color: ${theme.colors.background.default}; border-radius: 8px;">
   `;
 
+  // Peso atual ou último registro
   if (weightKg) {
-    html += `<div style="margin: 10px 0; color: ${theme.colors.text.default};"><strong>Peso:</strong> ${weightKg} kg</div>`;
+    html += `<div style="margin: 10px 0; color: ${theme.colors.text.default};"><strong>Peso Atual:</strong> ${weightKg} kg</div>`;
   }
+
+  // Altura atual ou último registro
   if (heightCm) {
     html += `<div style="margin: 10px 0; color: ${theme.colors.text.default};"><strong>Altura:</strong> ${heightCm} cm</div>`;
   }
-  if (bloodPressure) {
+
+  // Histórico de Pressão Arterial
+  if (bloodPressureRecords && bloodPressureRecords.length > 0) {
+    html += `
+      <div style="margin-top: 20px;">
+        <h3 style="color: ${theme.colors.text.default}; margin-bottom: 10px;">Histórico de Pressão Arterial</h3>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+          <thead>
+            <tr style="background-color: ${theme.colors.background.light};">
+              <th style="padding: 8px; text-align: left; border: 1px solid ${theme.colors.border.default}; color: ${theme.colors.text.default};"><strong>Data/Hora</strong></th>
+              <th style="padding: 8px; text-align: left; border: 1px solid ${theme.colors.border.default}; color: ${theme.colors.text.default};"><strong>Pressão</strong></th>
+              <th style="padding: 8px; text-align: left; border: 1px solid ${theme.colors.border.default}; color: ${theme.colors.text.default};"><strong>Observações</strong></th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+    bloodPressureRecords.forEach((record) => {
+      const pressureValue = record.secondaryValue
+        ? `${record.value}/${record.secondaryValue}`
+        : `${record.value}`;
+      html += `
+        <tr>
+          <td style="padding: 8px; border: 1px solid ${theme.colors.border.default}; color: ${theme.colors.text.default};">
+            ${formatDateTime(record.recordedAt)}
+          </td>
+          <td style="padding: 8px; border: 1px solid ${theme.colors.border.default}; color: ${theme.colors.text.default};">
+            ${pressureValue} ${record.unit || "mmHg"}
+          </td>
+          <td style="padding: 8px; border: 1px solid ${theme.colors.border.default}; color: ${theme.colors.text.muted};">
+            ${record.notes || "-"}
+          </td>
+        </tr>
+      `;
+    });
+    html += `
+          </tbody>
+        </table>
+      </div>
+    `;
+  } else if (bloodPressure) {
+    // Fallback para último valor se não houver histórico
     html += `<div style="margin: 10px 0; color: ${theme.colors.text.default};"><strong>Pressão Arterial:</strong> ${bloodPressure} mmHg</div>`;
   }
-  if (bloodSugar) {
+
+  // Histórico de Glicose
+  if (bloodSugarRecords && bloodSugarRecords.length > 0) {
+    html += `
+      <div style="margin-top: 20px;">
+        <h3 style="color: ${theme.colors.text.default}; margin-bottom: 10px;">Histórico de Glicemia</h3>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+          <thead>
+            <tr style="background-color: ${theme.colors.background.light};">
+              <th style="padding: 8px; text-align: left; border: 1px solid ${theme.colors.border.default}; color: ${theme.colors.text.default};"><strong>Data/Hora</strong></th>
+              <th style="padding: 8px; text-align: left; border: 1px solid ${theme.colors.border.default}; color: ${theme.colors.text.default};"><strong>Glicose</strong></th>
+              <th style="padding: 8px; text-align: left; border: 1px solid ${theme.colors.border.default}; color: ${theme.colors.text.default};"><strong>Observações</strong></th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+    bloodSugarRecords.forEach((record) => {
+      html += `
+        <tr>
+          <td style="padding: 8px; border: 1px solid ${theme.colors.border.default}; color: ${theme.colors.text.default};">
+            ${formatDateTime(record.recordedAt)}
+          </td>
+          <td style="padding: 8px; border: 1px solid ${theme.colors.border.default}; color: ${theme.colors.text.default};">
+            ${record.value} ${record.unit || "mg/dL"}
+          </td>
+          <td style="padding: 8px; border: 1px solid ${theme.colors.border.default}; color: ${theme.colors.text.muted};">
+            ${record.notes || "-"}
+          </td>
+        </tr>
+      `;
+    });
+    html += `
+          </tbody>
+        </table>
+      </div>
+    `;
+  } else if (bloodSugar) {
+    // Fallback para último valor se não houver histórico
     html += `<div style="margin: 10px 0; color: ${theme.colors.text.default};"><strong>Glicose:</strong> ${bloodSugar} mg/dL</div>`;
   }
-  if (lastUpdated) {
-    html += `<div style="margin: 10px 0; color: ${theme.colors.text.default};"><strong>Última Atualização:</strong> ${formatDate(lastUpdated)}</div>`;
-  }
 
-  const hasVitalSigns = weightKg || heightCm || bloodPressure || bloodSugar;
+  const hasVitalSigns =
+    weightKg ||
+    heightCm ||
+    bloodPressure ||
+    bloodSugar ||
+    (bloodPressureRecords && bloodPressureRecords.length > 0) ||
+    (bloodSugarRecords && bloodSugarRecords.length > 0);
   if (!hasVitalSigns) {
     html += `<p style="color: ${theme.colors.text.muted}; font-style: italic;">Nenhuma informação vital registrada.</p>`;
+  }
+
+  html += "</div></div>";
+  return html;
+};
+
+const generateSymptomsSection = (data: ReportDtoResponse): string => {
+  if (!data.symptomsData) {
+    return "";
+  }
+
+  const { symptoms, totalSymptoms } = data.symptomsData;
+
+  let html = `
+    <div style="margin-top: 30px;">
+      <h2 style="color: ${theme.colors.accent.secondary}; border-bottom: 2px solid ${theme.colors.accent.secondary}; padding-bottom: 10px;">
+        Registros de Sintomas
+      </h2>
+      
+      <div style="margin-top: 20px; padding: 15px; background-color: ${theme.colors.background.default}; border-radius: 8px;">
+        <div style="margin-bottom: 15px; color: ${theme.colors.text.default};">
+          <strong>Total de Registros:</strong> ${totalSymptoms}
+        </div>
+  `;
+
+  if (symptoms.length === 0) {
+    html += `<p style="color: ${theme.colors.text.muted}; font-style: italic;">Nenhum sintoma registrado no período selecionado.</p>`;
+  } else {
+    html += `
+      <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+        <thead>
+          <tr style="background-color: ${theme.colors.background.light};">
+            <th style="padding: 8px; text-align: left; border: 1px solid ${theme.colors.border.default}; color: ${theme.colors.text.default};"><strong>Data/Hora</strong></th>
+            <th style="padding: 8px; text-align: left; border: 1px solid ${theme.colors.border.default}; color: ${theme.colors.text.default};"><strong>Sintomas</strong></th>
+            <th style="padding: 8px; text-align: left; border: 1px solid ${theme.colors.border.default}; color: ${theme.colors.text.default};"><strong>Gravidade</strong></th>
+            <th style="padding: 8px; text-align: left; border: 1px solid ${theme.colors.border.default}; color: ${theme.colors.text.default};"><strong>Observações</strong></th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+    symptoms.forEach((symptom) => {
+      const severityDisplay = symptom.severity
+        ? `${symptom.severity}/10`
+        : "Não informado";
+      html += `
+        <tr>
+          <td style="padding: 8px; border: 1px solid ${theme.colors.border.default}; color: ${theme.colors.text.default};">
+            ${formatDateTime(symptom.recordedAt)}
+          </td>
+          <td style="padding: 8px; border: 1px solid ${theme.colors.border.default}; color: ${theme.colors.text.default};">
+            ${symptom.symptoms}
+          </td>
+          <td style="padding: 8px; border: 1px solid ${theme.colors.border.default}; color: ${theme.colors.text.default};">
+            ${severityDisplay}
+          </td>
+          <td style="padding: 8px; border: 1px solid ${theme.colors.border.default}; color: ${theme.colors.text.muted};">
+            ${symptom.notes || "-"}
+          </td>
+        </tr>
+      `;
+    });
+    html += `
+        </tbody>
+      </table>
+    `;
   }
 
   html += "</div></div>";
@@ -227,6 +401,7 @@ const generateReportHTML = (data: ReportDtoResponse): string => {
   const reportTypeLabels: Record<string, string> = {
     medicines: "Relatório de Medicações",
     vitalSigns: "Relatório de Informações Vitais",
+    symptoms: "Relatório de Sintomas",
     complete: "Relatório Completo",
   };
 
@@ -298,12 +473,21 @@ const generateReportHTML = (data: ReportDtoResponse): string => {
       ...data,
       vitalSignsData: data.completeData.vitalSigns,
     });
+    if (data.completeData.symptoms) {
+      html += generateSymptomsSection({
+        ...data,
+        symptomsData: data.completeData.symptoms,
+      });
+    }
   } else {
     if (data.medicinesData) {
       html += generateMedicinesSection(data);
     }
     if (data.vitalSignsData) {
       html += generateVitalSignsSection(data);
+    }
+    if (data.symptomsData) {
+      html += generateSymptomsSection(data);
     }
   }
 

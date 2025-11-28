@@ -1,7 +1,8 @@
 import styled from "styled-components/native";
+import { Pressable } from "react-native";
 import { theme } from "@/constants/theme";
 
-export const CardWrapper = styled.View<{
+export const CardWrapper = styled(Pressable)<{
   backgroundColor: string;
   borderColor?: string;
 }>`

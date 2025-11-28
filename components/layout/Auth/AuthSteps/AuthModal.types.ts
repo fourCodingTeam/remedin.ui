@@ -3,6 +3,7 @@ export type AuthModalProps = {
   mode: "login" | "register";
   onClose: () => void;
   onGoogleLogin?: () => void;
+  onPersonNotFound?: (email: string, token: string) => void;
 };
 
 export type AuthViewProps = {
@@ -11,6 +12,7 @@ export type AuthViewProps = {
 
 export interface AuthLoginProps extends AuthViewProps {
   onGoogleLogin?: () => void;
+  onPersonNotFound?: (email: string, token: string) => void;
 }
 
 export interface AuthRegisterProps extends AuthViewProps {}

@@ -262,6 +262,27 @@ export default function Home({ isMemberApp = false }: HomeProps) {
             tone={card.tone}
             value={card.value}
             onPress={() => {
+              // Verificar se a data é futura
+              const today = getTodayDate();
+              const cardDateOnly = new Date(
+                cardDate.getFullYear(),
+                cardDate.getMonth(),
+                cardDate.getDate()
+              );
+              const todayOnly = new Date(
+                today.getFullYear(),
+                today.getMonth(),
+                today.getDate()
+              );
+
+              if (cardDateOnly > todayOnly) {
+                showToast(
+                  "Não é possível alterar o status de medicações futuras",
+                  "info"
+                );
+                return;
+              }
+
               setSelectedMedicineId(medicineId);
               setSelectedScheduleId(scheduleId);
               setSelectedDateForModal(cardDate);

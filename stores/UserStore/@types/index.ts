@@ -3,6 +3,8 @@ export type UserState = {
   setIsLoggedIn: (isLoggedIn: boolean) => void;
   isLoggingIn: boolean;
   setIsLoggingIn: (isLoggingIn: boolean) => void;
+  needsRegistration: boolean;
+  setNeedsRegistration: (needsRegistration: boolean) => void;
   userId: string | null;
   setUserId: (personId: string | null) => void;
   username: string | null;
