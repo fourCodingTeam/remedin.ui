@@ -21,6 +21,7 @@ import {
   ModalHeaderTitle,
   StatusWrapper,
 } from "./MedicineAdherenceModal.styles";
+import { DoseTakenDateTimeModal } from "./DoseTakenDateTimeModal";
 import type { MedicineAdherenceModalProps } from "./MedicineAdherenceModal.types";
 
 function isValidDateObject(dateObj: Date | undefined | null): boolean {
@@ -52,6 +53,7 @@ export function MedicineAdherenceModal({
     useState<DoseOccurrenceDto | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isActionLoading, setIsActionLoading] = useState(false);
+  const [isDateTimeModalVisible, setIsDateTimeModalVisible] = useState(false);
   const { showToast } = useToast();
 
   const fetchDoseData = useCallback(
@@ -158,9 +160,21 @@ export function MedicineAdherenceModal({
     fetchDoseData,
   ]);
 
-  const handleMarkTaken = async () => {
+  const handleMarkTaken = async (takenAtDate?: Date) => {
     if (!doseOccurrence) {
       showToast("Dose não encontrada", "error");
+      return;
+    }
+
+    // Verificar se o horário agendado já passou
+    const scheduledAt = doseOccurrence.scheduledAt
+      ? new Date(doseOccurrence.scheduledAt)
+      : null;
+    const now = new Date();
+
+    // Se o horário agendado já passou e não foi fornecido um takenAtDate, mostrar modal
+    if (scheduledAt && scheduledAt.getTime() < now.getTime() && !takenAtDate) {
+      setIsDateTimeModalVisible(true);
       return;
     }
 
@@ -173,8 +187,9 @@ export function MedicineAdherenceModal({
         return;
       }
 
-      // Create ISO string for current time
-      const takenAt = new Date().toISOString();
+      // Usar a data fornecida ou a data atual
+      const dateToUse = takenAtDate instanceof Date ? takenAtDate : new Date();
+      const takenAt = dateToUse.toISOString();
 
       const response = await markDoseTaken(
         doseOccurrence.id,
@@ -206,6 +221,11 @@ export function MedicineAdherenceModal({
     } finally {
       setIsActionLoading(false);
     }
+  };
+
+  const handleDateTimeConfirm = (selectedDate: Date) => {
+    setIsDateTimeModalVisible(false);
+    handleMarkTaken(selectedDate);
   };
 
   const handleMarkSkipped = async () => {
@@ -290,6 +310,7 @@ export function MedicineAdherenceModal({
       setDoseOccurrence(null);
       setIsLoading(false);
       setIsActionLoading(false);
+      setIsDateTimeModalVisible(false);
     }
   }, [isVisible]);
 
@@ -453,6 +474,13 @@ export function MedicineAdherenceModal({
           />
         </ButtonsContainer>
       </FloatingModalContent>
+
+      <DoseTakenDateTimeModal
+        isVisible={isDateTimeModalVisible}
+        onClose={() => setIsDateTimeModalVisible(false)}
+        onConfirm={handleDateTimeConfirm}
+        scheduledAt={doseOccurrence?.scheduledAt}
+      />
     </Modal>
   );
 }

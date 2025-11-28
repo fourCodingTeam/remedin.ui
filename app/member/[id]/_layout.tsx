@@ -7,7 +7,7 @@ import { useToast } from "@/components/ui/Toast";
 
 export default function MemberLayout() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { setMember, getMemberById: getMemberFromStore } = useMemberStore();
+  const { setMember, getMemberById: getMemberFromStore, setWeight, setHeight } = useMemberStore();
   const { showToast } = useToast();
   const router = useRouter();
 
@@ -26,6 +26,13 @@ export default function MemberLayout() {
           phoneNumber: memberFromStore.phoneNumber || memberFromStore.phone || "",
           avatar: memberFromStore.avatar || "",
         });
+        // Set weight and height from store if available
+        if (memberFromStore.weightKg) {
+          setWeight(memberFromStore.weightKg);
+        }
+        if (memberFromStore.heightCm) {
+          setHeight(memberFromStore.heightCm);
+        }
         return;
       }
 
@@ -46,6 +53,13 @@ export default function MemberLayout() {
             phoneNumber: response.data.phone || "",
             avatar: "",
           });
+          // Set weight and height from API response
+          if (response.data.weightKg) {
+            setWeight(response.data.weightKg);
+          }
+          if (response.data.heightCm) {
+            setHeight(response.data.heightCm);
+          }
         } else {
           showToast(
             response.message || "Erro ao carregar dados do membro",
@@ -65,7 +79,7 @@ export default function MemberLayout() {
     };
 
     loadMemberData();
-  }, [id, setMember, getMemberFromStore, showToast, router]);
+  }, [id, setMember, getMemberFromStore, setWeight, setHeight, showToast, router]);
 
   return (
     <Stack

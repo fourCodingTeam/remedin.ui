@@ -101,7 +101,8 @@ export default function Home({ isMemberApp = false }: HomeProps) {
     const cards = mapMedicinesToCardsForDate(
       medicines,
       selectedDateObj,
-      selectedDateKey
+      selectedDateKey,
+      doseOccurrences
     );
 
     const enrichedCards = enrichCardsWithDoseStatus(cards, doseOccurrences);
@@ -364,6 +365,10 @@ export default function Home({ isMemberApp = false }: HomeProps) {
         <MedicinesModal
           isVisible={isMedicinesModalVisible}
           onClose={() => setIsMedicinesModalVisible(false)}
+          onMedicinesChanged={() => {
+            reloadMedicines();
+            reloadDoses();
+          }}
         />
         <ReportsModal
           isVisible={isReportsModalVisible}
@@ -462,6 +467,10 @@ export default function Home({ isMemberApp = false }: HomeProps) {
       <MedicinesModal
         isVisible={isMedicinesModalVisible}
         onClose={() => setIsMedicinesModalVisible(false)}
+        onMedicinesChanged={() => {
+          reloadMedicines();
+          reloadDoses();
+        }}
       />
       <ReportsModal
         isVisible={isReportsModalVisible}

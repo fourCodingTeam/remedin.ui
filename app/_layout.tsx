@@ -1,5 +1,6 @@
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
 import { ToastProvider } from "@/components/ui/Toast";
@@ -54,6 +55,7 @@ export default function RootLayout() {
 
   return (
     <ToastProvider>
+      <StatusBar style="dark" />
       <RootLayoutNav />
     </ToastProvider>
   );

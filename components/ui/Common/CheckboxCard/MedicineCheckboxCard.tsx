@@ -94,7 +94,7 @@ export function MedicineCheckboxCard({
 
           {statusLabel ? (
             <StyledText
-              color={isChecked ? "light" : secondaryTextColor}
+              color={isChecked ? "dark" : secondaryTextColor}
               variant="mediumRegular"
             >
               {statusLabel}

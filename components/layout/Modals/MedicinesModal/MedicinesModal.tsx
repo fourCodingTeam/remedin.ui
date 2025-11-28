@@ -65,7 +65,7 @@ function mapSchedulesToMedicines(
   });
 }
 
-export function MedicinesModal({ isVisible, onClose }: MedicinesModalProps) {
+export function MedicinesModal({ isVisible, onClose, onMedicinesChanged }: MedicinesModalProps) {
   const [medicines, setMedicines] = useState<MedicineWithSchedules[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedMedicines, setSelectedMedicines] = useState<Set<string>>(
@@ -207,6 +207,8 @@ export function MedicinesModal({ isVisible, onClose }: MedicinesModalProps) {
     setIsDeleteModalVisible(false);
     setSelectedMedicines(new Set());
       await loadMedicines();
+      // Notificar o componente pai para fazer refetch
+      onMedicinesChanged?.();
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Erro ao deletar medicações";

@@ -88,7 +88,8 @@ function processMedicineSchedules(
   medicine: MedicineWithSchedules,
   targetDate: Date,
   dateKey: string,
-  title: string
+  title: string,
+  doseOccurrences?: DoseOccurrenceDto[]
 ): MedicineCardData[] {
   const result: MedicineCardData[] = [];
 
@@ -111,6 +112,45 @@ function processMedicineSchedules(
             dateKey,
             title
           );
+          result.push(cardData);
+        }
+      } else if (
+        schedule.scheduleType === 3 && // EveryXHours
+        doseOccurrences
+      ) {
+        // Para EveryXHours, criar um card para cada dose do dia
+        const dosesForSchedule = doseOccurrences.filter(
+          (dose) =>
+            dose.medicineId === medicine.id &&
+            dose.scheduleId === schedule.id
+        );
+
+        if (dosesForSchedule.length > 0) {
+          // Criar um card para cada dose
+          for (const dose of dosesForSchedule) {
+            const scheduledDate = new Date(dose.scheduledAt);
+            const hours = scheduledDate.getHours().toString().padStart(2, "0");
+            const minutes = scheduledDate.getMinutes().toString().padStart(2, "0");
+            const timeDisplay = `${hours}:${minutes}`;
+            
+            const scheduleWithTime = {
+              ...schedule,
+              timeOfDay: `${hours}:${minutes}:00`,
+            };
+            
+            const cardData = createCardData(
+              medicine,
+              scheduleWithTime,
+              dateKey,
+              title
+            );
+            // Usar o ID da dose no card para identificação única
+            cardData.id = `${medicine.id}-${schedule.id}-${dateKey}-${dose.id}`;
+            result.push(cardData);
+          }
+        } else {
+          // Se não há doses ainda, criar um card padrão (será criado quando buscar)
+          const cardData = createCardData(medicine, schedule, dateKey, title);
           result.push(cardData);
         }
       } else {
@@ -146,7 +186,8 @@ function sortCardsByTime(cards: MedicineCardData[]): MedicineCardData[] {
 export function mapMedicinesToCardsForDate(
   medicines: MedicineWithSchedules[],
   targetDate: Date,
-  dateKey: string
+  dateKey: string,
+  doseOccurrences?: DoseOccurrenceDto[]
 ): MedicineCardData[] {
   const result: MedicineCardData[] = [];
 
@@ -160,7 +201,8 @@ export function mapMedicinesToCardsForDate(
       medicine,
       targetDate,
       dateKey,
-      title
+      title,
+      doseOccurrences
     );
     result.push(...cards);
   }
