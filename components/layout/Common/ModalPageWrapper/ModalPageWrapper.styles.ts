@@ -1,4 +1,5 @@
 import styled from "styled-components/native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { theme } from "@/constants/theme";
 
 export const ModalPageWrapperWrapper = styled.Modal`
@@ -7,6 +8,11 @@ export const ModalPageWrapperWrapper = styled.Modal`
   background-color: ${theme.colors.background.default};
   flex-direction: column;
   gap: 8px;
+`;
+
+export const ModalSafeAreaContainer = styled(SafeAreaView)`
+  flex: 1;
+  background-color: ${theme.colors.background.default};
 `;
 
 export const ContentWrapper = styled.View`
@@ -36,7 +42,7 @@ export const HeaderWrapper = styled.View`
   gap: ${theme.sizes[1]};
   padding: ${theme.sizes[4]};
   background-color: ${theme.colors.background.default};
-  padding-top: ${theme.sizes[7]};
+  padding-top: ${theme.sizes[4]};
 `;
 
 export const TitleWrapper = styled.View`
