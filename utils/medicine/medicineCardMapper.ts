@@ -226,15 +226,23 @@ export function enrichCardsWithDoseStatus(
     const key = `${medicineId}|${scheduleId}|${dateKey}`;
     const matchingOccurrence = occurrenceMap.get(key);
 
+    const enrichedCard = { ...card };
+    const baseCard = card.card || {};
+    
     if (!matchingOccurrence) {
-      return card;
+      // Se não há ocorrência, definir como pendente
+      enrichedCard.card = {
+        ...baseCard,
+        checked: false,
+        isCompleted: false,
+        isForgotten: false,
+        statusLabel: "Pendente",
+        tone: "secondary",
+      };
+      return enrichedCard;
     }
 
-    const enrichedCard = { ...card };
     const status = matchingOccurrence.status;
-
-    // Ensure we preserve all card properties when enriching
-    const baseCard = card.card || {};
     
     if (status === "Taken") {
       enrichedCard.card = {
@@ -247,6 +255,7 @@ export function enrichCardsWithDoseStatus(
         isCompleted: true,
         isForgotten: false,
         statusLabel: "Tomada",
+        tone: "primary",
       };
     } else if (status === "Skipped") {
       enrichedCard.card = {
@@ -259,6 +268,7 @@ export function enrichCardsWithDoseStatus(
         isCompleted: false,
         isForgotten: true,
         statusLabel: "Pulada",
+        tone: "danger",
       };
     } else if (status === "Pending") {
       enrichedCard.card = {
@@ -271,6 +281,7 @@ export function enrichCardsWithDoseStatus(
         isCompleted: false,
         isForgotten: false,
         statusLabel: "Pendente",
+        tone: "secondary",
       };
     }
 

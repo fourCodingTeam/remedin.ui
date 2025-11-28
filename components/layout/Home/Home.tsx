@@ -35,7 +35,11 @@ export default function Home({ isMemberApp = false }: HomeProps) {
   const { member } = useMemberStore();
   const { showToast } = useToast();
   const { memberId } = useMemberContext();
-  const { medicines, isLoading, reloadMedicines } = useMedicines(memberId);
+  
+  // Use memberId from context if available, otherwise use member.id
+  const effectiveMemberId = isMemberApp ? (member.id || memberId) : memberId;
+  
+  const { medicines, isLoading, reloadMedicines } = useMedicines(effectiveMemberId);
   const getTodayDate = () => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -48,7 +52,7 @@ export default function Home({ isMemberApp = false }: HomeProps) {
     doseOccurrences,
     isLoading: isLoadingDoses,
     reload: reloadDoses,
-  } = useDoseOccurrencesForDate(selectedDate, memberId);
+  } = useDoseOccurrencesForDate(selectedDate, effectiveMemberId);
   const [selectedFilter, setSelectedFilter] = useState<
     string | number | undefined
   >();

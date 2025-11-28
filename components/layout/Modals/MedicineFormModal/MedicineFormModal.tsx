@@ -54,6 +54,7 @@ export function MedicineFormModal({
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<MedicineWithScheduleFormData>({
     resolver: zodResolver(medicineWithScheduleSchema),
@@ -69,17 +70,41 @@ export function MedicineFormModal({
       weekDays: null,
       preAlarmMinutes: 15,
       posAlarmMinutes: 15,
+      intervalInHours: null,
+      firstDoseAt: null,
     },
     mode: "onChange",
   });
 
   const scheduleType = watch("scheduleType");
+  const intervalInHours = watch("intervalInHours");
+  const startDate = watch("startDate");
 
   useEffect(() => {
     if (!isVisible) {
       reset();
     }
   }, [isVisible, reset]);
+
+  // Atualizar firstDoseAt quando startDate mudar (para EveryXHours)
+  useEffect(() => {
+    if (scheduleType === MedicineScheduleType.EveryXHours && startDate) {
+      const currentFirstDoseAt = watch("firstDoseAt");
+      if (currentFirstDoseAt) {
+        // Se já houver um horário definido, atualizar a data mantendo o horário
+        const existingDate = new Date(currentFirstDoseAt);
+        const updatedDate = new Date(
+          startDate.getFullYear(),
+          startDate.getMonth(),
+          startDate.getDate(),
+          existingDate.getHours(),
+          existingDate.getMinutes(),
+          existingDate.getSeconds()
+        );
+        setValue("firstDoseAt", updatedDate.toISOString());
+      }
+    }
+  }, [startDate, scheduleType, setValue, watch]);
 
   const handleCancel = () => {
     reset();
@@ -503,6 +528,129 @@ export function MedicineFormModal({
                       )}
                     </>
                   )}
+                />
+              </>
+            ) : null}
+            {scheduleType === MedicineScheduleType.EveryXHours ? (
+              <>
+                <Controller
+                  control={control}
+                  name="firstDoseAt"
+                  render={({ field: { onChange, value } }) => {
+                    // Converter ISO string para Date para InputDate
+                    let dateValue: Date | null = null;
+                    if (value) {
+                      try {
+                        dateValue = new Date(value);
+                      } catch {
+                        dateValue = null;
+                      }
+                    }
+                    return (
+                      <>
+                        <InputDate
+                          mode="time"
+                          onChange={(date) => {
+                            if (date) {
+                              // Usar a data de início da medicação ou data atual se não houver
+                              const baseDate = startDate || new Date();
+                              const selectedDate = new Date(
+                                baseDate.getFullYear(),
+                                baseDate.getMonth(),
+                                baseDate.getDate(),
+                                date.getHours(),
+                                date.getMinutes(),
+                                date.getSeconds()
+                              );
+                              // Converter para ISO string com timezone
+                              const isoString = selectedDate.toISOString();
+                              onChange(isoString);
+                            } else {
+                              onChange(null);
+                            }
+                          }}
+                          placeholder="Horário inicial"
+                          suffixIcon="clock-o"
+                          value={dateValue}
+                        />
+                        {errors.firstDoseAt && (
+                          <StyledText color="error" variant="mediumRegular">
+                            {errors.firstDoseAt.message}
+                          </StyledText>
+                        )}
+                      </>
+                    );
+                  }}
+                />
+                <StyledText style={{ marginTop: 8 }} variant="mediumRegular">
+                  Intervalo
+                </StyledText>
+                <Controller
+                  control={control}
+                  name="intervalInHours"
+                  render={({ field: { onChange, value } }) => {
+                    const intervalOptions = [
+                      { label: "6 horas", value: 6 },
+                      { label: "8 horas", value: 8 },
+                    ];
+                    const isCustomInterval = value !== null && value !== undefined && value !== 6 && value !== 8;
+                    const showCustomField = isCustomInterval || value === null || value === undefined;
+                    
+                    return (
+                      <>
+                        <WeekDaysWrapper>
+                          {intervalOptions.map((option) => {
+                            const isSelected = value === option.value;
+                            
+                            return (
+                              <MultiSelectTag
+                                id={option.value.toString()}
+                                isSelected={isSelected}
+                                key={option.value.toString()}
+                                label={option.label}
+                                onPress={() => {
+                                  onChange(option.value);
+                                }}
+                              />
+                            );
+                          })}
+                          <MultiSelectTag
+                            id="custom"
+                            isSelected={isCustomInterval}
+                            key="custom"
+                            label="Personalizado"
+                            onPress={() => {
+                              // Ao clicar em personalizado, limpar o valor para mostrar o campo
+                              onChange(null);
+                            }}
+                          />
+                        </WeekDaysWrapper>
+                        {showCustomField ? (
+                          <>
+                            <InputBase
+                              keyboardType="numeric"
+                              onChangeText={(text) => {
+                                const num = Number.parseInt(text, 10);
+                                if (!Number.isNaN(num) && num > 0) {
+                                  onChange(num);
+                                } else {
+                                  onChange(null);
+                                }
+                              }}
+                              placeholder="Intervalo personalizado (horas)"
+                              style={{ marginTop: 8 }}
+                              value={isCustomInterval && value ? value.toString() : ""}
+                            />
+                            {errors.intervalInHours && (
+                              <StyledText color="error" variant="mediumRegular">
+                                {errors.intervalInHours.message}
+                              </StyledText>
+                            )}
+                          </>
+                        ) : null}
+                      </>
+                    );
+                  }}
                 />
               </>
             ) : null}

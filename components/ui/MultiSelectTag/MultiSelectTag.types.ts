@@ -1,5 +1,5 @@
 export type MultiSelectTagProps = {
-  id: number;
+  id: number | string;
   label: string;
   isSelected?: boolean;
   disabled?: boolean;
