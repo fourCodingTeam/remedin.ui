@@ -100,10 +100,8 @@ export default function Home({ isMemberApp = false }: HomeProps) {
       selectedDateKey
     );
 
-    // Enrich cards with dose occurrence status
     const enrichedCards = enrichCardsWithDoseStatus(cards, doseOccurrences);
 
-    // Filter out any invalid cards that might have lost their structure
     let validCards = enrichedCards.filter((card) => {
       const isValid =
         card &&
@@ -119,42 +117,32 @@ export default function Home({ isMemberApp = false }: HomeProps) {
       return isValid;
     });
 
-    // Handle "not_scheduled" filter - medicações sem schedule não aparecem no mapMedicinesToCardsForDate
-    // Então vamos verificar diretamente nas medicines
     if (selectedFilter === "not_scheduled") {
       const medicinesWithoutSchedules = medicines.filter(
         (med) => !med.schedules || med.schedules.length === 0
       );
-      // Se não houver medicações sem schedule, retornar array vazio
       if (medicinesWithoutSchedules.length === 0) {
         return [];
       }
-      // Caso contrário, não há como criar cards para elas sem schedule, então retornar vazio
       return [];
     }
 
-    // Apply filter based on selectedFilter
     if (selectedFilter && selectedFilter !== "all") {
       validCards = validCards.filter((card) => {
         switch (selectedFilter) {
           case "scheduled":
-            // Medicações agendadas - todas têm schedule (já filtradas pelo mapMedicinesToCardsForDate)
             return true;
           
           case "completed":
-            // Medicações concluídas (tomadas)
             return card.card.isCompleted === true;
           
           case "pending":
-            // Medicações pendentes (não tomadas e não puladas)
             return !card.card.isCompleted && !card.card.isForgotten;
           
           case "nearest":
-            // Mais próximas - todas passam, vamos ordenar depois
             return true;
           
           case "furthest":
-            // Mais distantes - todas passam, vamos ordenar depois
             return true;
           
           default:
@@ -162,7 +150,6 @@ export default function Home({ isMemberApp = false }: HomeProps) {
         }
       });
 
-      // Apply sorting for "nearest" and "furthest"
       if (selectedFilter === "nearest") {
         validCards = [...validCards].sort((a, b) => {
           const timeA = a.card.scheduleLabel?.split(" - ")[0] || "";
@@ -213,7 +200,6 @@ export default function Home({ isMemberApp = false }: HomeProps) {
 
     return medicinesForSelectedDate
       .map((item, index) => {
-        // Validate item structure
         if (!(item && item.card && item.id)) {
           console.warn(
             `[Home] Invalid item structure at index ${index}:`,
@@ -224,7 +210,6 @@ export default function Home({ isMemberApp = false }: HomeProps) {
 
         const { id, card, date: cardDateKey } = item;
 
-        // Skip if card.value is missing or invalid
         if (!(card && card.value) || typeof card.value !== "string") {
           console.warn(
             `[Home] Missing or invalid card.value at index ${index}:`,
@@ -237,7 +222,6 @@ export default function Home({ isMemberApp = false }: HomeProps) {
           return null;
         }
 
-        // Use "|" as separator to avoid conflicts with GUID format
         const separator = "|";
         let parts: string[];
 
@@ -249,25 +233,30 @@ export default function Home({ isMemberApp = false }: HomeProps) {
         }
 
         if (parts.length !== 2) {
-          // Skip invalid cards (wrong format)
           return null;
         }
 
         const [medicineId, scheduleId] = parts;
 
-        // Convert dateKey to Date object for the modal
         let cardDate: Date;
         try {
           cardDate = getDateFromKey(cardDateKey);
         } catch {
-          // Fallback to current date if conversion fails
           cardDate = getTodayDate();
         }
 
         return (
           <MedicineCheckboxCard
             key={id}
-            {...card}
+            checked={card.checked}
+            extraLines={card.extraLines}
+            isCompleted={card.isCompleted}
+            isForgotten={card.isForgotten}
+            scheduleLabel={card.scheduleLabel}
+            statusLabel={card.statusLabel}
+            title={card.title}
+            tone={card.tone}
+            value={card.value}
             onPress={() => {
               setSelectedMedicineId(medicineId);
               setSelectedScheduleId(scheduleId);

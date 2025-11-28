@@ -30,7 +30,6 @@ export function EditPersonalInformationModal({
     userId,
     setPersonData,
   } = useUserStore();
-  const { memberId, isMemberContext } = useMemberContext();
   const { showToast } = useToast();
   const { reload: reloadHealthData } = useHealthData();
 
@@ -38,7 +37,7 @@ export function EditPersonalInformationModal({
   const [phone, setPhone] = useState("");
   const [emailValue, setEmailValue] = useState("");
   const [weightValue, setWeightValue] = useState("");
-  const [heightValue, setHeightValue] = useState("");
+const [heightValue, setHeightValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -102,7 +101,7 @@ export function EditPersonalInformationModal({
     } finally {
       setIsLoading(false);
     }
-  }, [memberId, member, weight, height, showToast]);
+  }, [member.id, member, weight, height, showToast]);
 
   const loadCurrentUserData = useCallback(async () => {
     setIsLoading(true);
@@ -163,16 +162,15 @@ export function EditPersonalInformationModal({
     }
 
     if (isVisible && member.id) {
-      console.log("member.id:", member.id);
       loadMemberData();
       reloadHealthData();
-    } else if (isVisible && !memberId) {
+    } else if (isVisible && !member.id) {
       loadCurrentUserData();
       reloadHealthData();
     }
   }, [
     isVisible,
-    memberId,
+    member.id,
     loadMemberData,
     loadCurrentUserData,
     reloadHealthData,
@@ -188,7 +186,7 @@ export function EditPersonalInformationModal({
         return;
       }
 
-      const personIdToUpdate = memberId || userId;
+      const personIdToUpdate = member.id || userId;
       if (!personIdToUpdate) {
         showToast("Erro ao identificar usuário", "error");
         setIsSaving(false);
@@ -245,7 +243,7 @@ export function EditPersonalInformationModal({
       if (response.success && response.data) {
         showToast("Informações atualizadas com sucesso!", "success");
 
-        if (memberId) {
+        if (member.id) {
           setMember({
             ...member,
             name: response.data.name || member.name,

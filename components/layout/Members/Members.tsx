@@ -11,7 +11,6 @@ import {
 } from "@/constants/sideMenu.config";
 import { theme } from "@/constants/theme";
 import { getMembersByOwner, getMemberById } from "@/services/api/person";
-import { memberMock } from "@/services/mock/memberMock";
 import { getAuthToken } from "@/services/utils/getAuthToken";
 import { useMemberStore } from "@/stores/MemberStore";
 import { useUserStore } from "@/stores/UserStore";
@@ -167,6 +166,17 @@ export function Members({ isMemberApp = false }: MembersProps) {
     loadMembers();
   };
 
+  const handleGoBackToUser = () => {
+    setMember({
+      id: "",
+      name: "",
+      phoneNumber: "",
+      avatar: "",
+    });
+
+    router.dismissTo("/(tabs)")
+  }
+
   const handleLogOut = async () => {
     await signOut();
     router.replace("/auth");
@@ -205,8 +215,8 @@ export function Members({ isMemberApp = false }: MembersProps) {
             id={userId ?? ""}
             isUser
             name="Você"
-            onPress={() => router.dismissTo("/(tabs)")}
-            phoneNumber="34996621768"
+            onPress={() => handleGoBackToUser()}
+            phoneNumber= {phoneNumber?.toString()}
           />
         </ContentWrapper>
         <ProfileModal

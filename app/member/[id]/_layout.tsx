@@ -18,8 +18,6 @@ export default function MemberLayout() {
         return;
       }
 
-      console.log("id:", id);
-
       const memberFromStore = getMemberFromStore(id);
       if (memberFromStore) {
         setMember({

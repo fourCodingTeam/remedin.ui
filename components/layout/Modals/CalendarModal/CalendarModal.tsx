@@ -113,10 +113,15 @@ export function CalendarModal({ isVisible, onClose }: CalendarModalProps) {
         <MedicinesStack>
           {medicinesList.map((medicine) => (
             <MedicineCheckboxCard
+              checked={medicine.card.checked}
               extraLines={medicine.card.extraLines}
+              isCompleted={medicine.card.isCompleted}
+              isForgotten={medicine.card.isForgotten}
               key={medicine.id}
               scheduleLabel={medicine.card.scheduleLabel}
+              statusLabel={medicine.card.statusLabel}
               title={medicine.card.title}
+              tone={medicine.card.tone}
               value={medicine.card.value}
             />
           ))}
